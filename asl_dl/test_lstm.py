@@ -71,7 +71,7 @@ def main():
     X, y = dataset[:][0], dataset[:][1]
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.15, random_state=SEED, shuffle=True, stratify=y)
 
-    input_dim = X[0].shape[1]
+    input_dim = X[0].shape[1] if args.model != "mlp" else X[0].shape[0] * X[0].shape[1]
     output_dim = len(np.unique(y))
 
     if args.weighted_loss:

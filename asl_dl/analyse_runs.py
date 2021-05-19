@@ -10,7 +10,7 @@ runs = sorted(runs)
 
 df = pd.DataFrame(columns=sorted(['model', 'n_layers', 'n_lin_layers', 'hidden_dim', 'dropout', 'lin_dropout',
                            'bidirectional', 'epochs', 'batch_size', 'weighted_loss', 'optimizer',
-                           'lr', 'final_lr', 'momentum', 'step_size', 'gamma', 'interpolated']) + ['mean_train_loss', 'std_train_loss',
+                           'lr', 'final_lr', 'momentum', 'step_size', 'gamma', 'interpolated', 'folder', 'batch_norm']) + ['mean_train_loss', 'std_train_loss',
                            'mean_train_f1_score', 'std_train_f1_score', 'mean_val_loss', 'std_val_loss',
                            'mean_val_f1_score', 'std_val_f1_score'])
 
@@ -23,6 +23,9 @@ for run in tqdm(runs):
         if "interpolated" not in args.keys():
             args["interpolated"] = True
         del args["device"]
+        args["folder"] = run
+        if "batch_norm" not in args.keys():
+            args["batch_norm"] = True
         args = {k: args[k] for k in sorted(args.keys())}
         args = list(args.values())
         min_train_loss_per_fold = list(json_log["min_train_loss_per_fold"].values())

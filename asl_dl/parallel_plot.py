@@ -12,14 +12,16 @@ df["weighted_loss"] = df["weighted_loss"].astype('category').cat.codes
 df = df.drop(["epochs", "final_lr", "std_train_loss", "std_train_f1_score", "std_val_loss", "std_val_f1_score", "batch_size"], axis=1)
 df = df.drop(["mean_train_loss", "mean_train_f1_score"], axis=1)
 
-fig = px.parallel_coordinates(df, color="mean_val_f1_score", dimensions=["bidirectional", "interpolated", "dropout", "hidden_dim", "lin_dropout", "lr", "model", "n_layers", "n_lin_layers", "step_size", "mean_val_f1_score"])
-fig.show()
-# df = df[df["model"] == 0]
-# df = df.drop("model", axis=1)
-# corr = df.corr()
-#
-# fig = plt.figure()
-# sns.heatmap(corr, cmap="Blues", annot=True,
-#         xticklabels=corr.columns,
-#         yticklabels=corr.columns)
-# plt.show()
+# fig = px.parallel_coordinates(df, color="mean_val_f1_score", dimensions=["bidirectional", "interpolated", "dropout", "hidden_dim", "lin_dropout", "lr", "model", "n_layers", "n_lin_layers", "step_size"])
+# fig.show()
+df = df.loc[df["model"] == 1]
+df.drop("model", axis=1, inplace=True)
+df.drop("bidirectional", axis=1, inplace=True)
+
+corr = df.corr()
+
+fig = plt.figure()
+sns.heatmap(corr, cmap="Blues", annot=True,
+        xticklabels=corr.columns,
+        yticklabels=corr.columns)
+plt.show()

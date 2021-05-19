@@ -85,6 +85,22 @@ from tqdm import tqdm
 #     interpolated=[True, False]
 # )
 
+param_grid_mlp = dict(
+    model=["mlp"],
+    n_layers=[0],
+    n_lin_layers=[2, 3, 4, 5],
+    hidden_dim=[64, 128, 256, 512, 1024],
+    dropout=[0.0],
+    lin_dropout=[0.0],
+    weighted_loss=[True, False],
+    optimizer=["adam"],
+    lr=[1e-4],
+    step_size=[200],
+    gamma=[0.1],
+    interpolated=[True],
+    batch_norm=[True, False]
+)
+
 param_grid_lstm = dict(
     model=["lstm"],
     n_layers=[3],
@@ -115,9 +131,10 @@ param_grid_gru = dict(
     interpolated=[False]
 )
 
+mlp_grid = list(ParameterGrid(param_grid_mlp))
 lstm_grid = list(ParameterGrid(param_grid_lstm))
 gru_grid = list(ParameterGrid(param_grid_gru))
-grid = lstm_grid + gru_grid
+grid = mlp_grid #+ lstm_grid + gru_grid
 
 cmd = ""
 
@@ -131,10 +148,11 @@ for elem in tqdm(grid):
                                                                                 elem["weighted_loss"],
                                                                                 elem["optimizer"],
                                                                                 elem["lr"])
-    cmd += "--step_size {} --gamma {} --model {} --interpolated {}".format(elem["step_size"],
-                                                                           elem["gamma"],
-                                                                           elem["model"],
-                                                                           elem["interpolated"])
+    cmd += "--step_size {} --gamma {} --model {} --interpolated {} --batch_norm {}".format(elem["step_size"],
+                                                                                           elem["gamma"],
+                                                                                           elem["model"],
+                                                                                           elem["interpolated"],
+                                                                                           elem["batch_norm"])
     cmd += "\n"
 
 with open("commands.txt", "w") as fp:

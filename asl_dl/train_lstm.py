@@ -2,7 +2,7 @@ import torch
 import random
 import numpy as np
 from tqdm import tqdm
-from asl_dl.asl_model import ASLModel, ASLModelGRU
+from asl_dl.asl_model import ASLModel, ASLModelGRU, ASLModelMLP
 from asl_data.asl_dataset import ASLDataset
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import f1_score
@@ -55,7 +55,11 @@ def get_loss(weights):
 
 
 def get_model(args, input_dim, output_dim):
-    if args.model == "lstm":
+    if args.model == "mlp":
+        assert args.interpolated, "Input must have fixed length"
+        return ASLModelMLP(input_dim, args.hidden_dim, output_dim, n_lin_layers=args.n_lin_layers,
+                           lin_dropout=args.lin_dropout, batch_norm=args.batch_norm)
+    elif args.model == "lstm":
         model = ASLModel
     elif args.model == "gru":
         model = ASLModelGRU
@@ -64,7 +68,7 @@ def get_model(args, input_dim, output_dim):
     return model(input_dim, args.hidden_dim, args.n_layers, output_dim, batch_first=True,
                  dropout=args.dropout, bidirectional=args.bidirectional,
                  n_lin_layers=args.n_lin_layers, lin_dropout=args.lin_dropout,
-                 batch_norm=True)
+                 batch_norm=args.batch_norm)
 
 
 def run_once(args, model, loader, criterion, optimizer, is_train=False):
@@ -92,7 +96,7 @@ def run_once(args, model, loader, criterion, optimizer, is_train=False):
 def train_n_epochs(args, train_dataset, val_dataset, weights, input_dim, output_dim, writer, log_dir, tag):
     train_loader = DataLoader(train_dataset, shuffle=True, batch_size=args.batch_size,
                               num_workers=4, drop_last=False, worker_init_fn=seed_worker)
-    val_loader = DataLoader(val_dataset, shuffle=True, batch_size=args.batch_size,
+    val_loader = DataLoader(val_dataset, shuffle=False, batch_size=args.batch_size,
                             num_workers=2, drop_last=False, worker_init_fn=seed_worker)
 
     criterion = get_loss(weights)
@@ -168,7 +172,7 @@ def main():
     X, y = dataset[:][0], dataset[:][1]
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.15, random_state=SEED, shuffle=True, stratify=y)
 
-    input_dim = X[0].shape[1]
+    input_dim = X[0].shape[1] if args.model != "mlp" else X[0].shape[0] * X[0].shape[1]
     output_dim = len(np.unique(y))
 
     if args.weighted_loss:

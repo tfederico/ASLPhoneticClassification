@@ -1,6 +1,36 @@
 import torch
 from torch import nn
 
+class ASLModelMLP(nn.Module):
+    def __init__(self, input_dim, hidden_dim, output_dim, n_lin_layers=2, lin_dropout=0, batch_norm=False):
+        assert n_lin_layers > 1, "MLP needs at least 2 layers (hidden + output)"
+        super().__init__()
+        self.input_dim = input_dim
+        self.hidden_dim = hidden_dim
+        self.output_dim = output_dim
+        self.n_lin_layers = n_lin_layers
+        self.lin_dropout = lin_dropout
+        self.batch_norm = batch_norm
+
+        linear_layers = []
+        linear_layers.append(nn.Flatten())
+        linear_layers.append(nn.Linear(input_dim, self.hidden_dim))
+
+        for i in range(1, self.n_lin_layers):
+            linear_layers.append(nn.ReLU())
+            linear_layers.append(nn.Dropout(p=self.lin_dropout))
+            if self.batch_norm:
+                linear_layers.append(nn.BatchNorm1d(self.hidden_dim))
+            if i < self.n_lin_layers - 1:
+                linear_layers.append(nn.Linear(self.hidden_dim, self.hidden_dim))
+            else:
+                linear_layers.append(nn.Linear(self.hidden_dim, self.output_dim))
+        self.linear_layers = nn.Sequential(*linear_layers)
+
+    def forward(self, x):
+        x = x.float()
+        return self.linear_layers(x)
+
 
 class ASLModel(nn.Module):
     def __init__(self, input_dim, hidden_dim, num_layers, output_dim, batch_first=True,

@@ -13,7 +13,7 @@ def str2bool(v):
 def get_parser():
     parser = argparse.ArgumentParser(description="ASL-Lex feature recognition")
     parser.add_argument('--device', default="cuda:0", type=str, help='device id')
-    parser.add_argument('--model', default="lstm", type=str, help='memory unit', choices=['lstm', 'gru'])
+    parser.add_argument('--model', default="lstm", type=str, help='memory unit', choices=['lstm', 'gru', "mlp"])
     parser.add_argument('--n_layers', default=2, type=int, help='# layers lstm')
     parser.add_argument('--n_lin_layers', default=2, type=int, help='# linear layers')
     parser.add_argument('--hidden_dim', default=256, type=int, help='# hidden units in lstm')
@@ -30,4 +30,5 @@ def get_parser():
     parser.add_argument('--step_size', default=100, type=int, help='step size for lr scheduler')
     parser.add_argument('--gamma', default=0.1, type=float, help='gamma for lr scheduler')
     parser.add_argument('--interpolated', default=True, type=str2bool, choices=[True, False], help='using downsampled data')
+    parser.add_argument('--batch_norm', default=True, type=str2bool, choices=[True, False], help='using batch_normalisation')
     return parser
