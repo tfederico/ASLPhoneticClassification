@@ -30,6 +30,7 @@ def print_labels_statistics(y):
 # MajorLocation, Movement
 
 random_seed = 87342
+different_length = False
 
 metrics = ["f1_micro", "f1_macro"]
 test_size = 0.15
@@ -46,7 +47,7 @@ if not os.path.exists("valid_results"):
 for label in labels:
     print("Label {}".format(label))
     X, y, le = preprocess_dataset(label, drop_feat_lr=drop_features_lr,
-                                    drop_feat_center=drop_features_center, different_length=True,
+                                    drop_feat_center=drop_features_center, different_length=different_length,
                                     trick_maj_loc=False)
     #print_labels_statistics(y)
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=test_size, random_state=random_seed, shuffle=True, stratify=y)

@@ -13,8 +13,8 @@ import numpy as np
 def get_classifiers_names():
     names = [
             "Dummy",
-            # "SVM",
-            # "Logistic Regression",
+            "SVM",
+            "Logistic Regression",
             "Random Forest"
             ]
     return names
@@ -22,8 +22,8 @@ def get_classifiers_names():
 def get_classifiers(random_seed):
     classifiers = [
         DummyClassifier(random_state=random_seed),
-        # SVC(random_state=random_seed),
-        # LogisticRegression(random_state=random_seed),
+        SVC(random_state=random_seed),
+        LogisticRegression(random_state=random_seed),
         RandomForestClassifier(random_state=random_seed)
     ]
     return classifiers
