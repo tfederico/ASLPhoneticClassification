@@ -67,3 +67,4 @@ for label in labels:
                                          color="navy", lw=lw)
                         plt.legend(loc="best")
                         plt.savefig("valid_results/{}/{}_{}_{}.pdf".format(model, label, metric, param_name))
+                        plt.close()
