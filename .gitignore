@@ -1,5 +1,5 @@
 asl_dl/runs
-asl_ml/test_results
+asl_ml/valid_results
 asl_data/reduced_SignData.csv
 asl_data/csvs
 asl_data/interpolated_csvs

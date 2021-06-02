@@ -1,6 +1,6 @@
 from sklearn.naive_bayes import GaussianNB
 from sklearn.dummy import DummyClassifier
-from sklearn.svm import LinearSVC
+from sklearn.svm import LinearSVC, SVC
 from sklearn.linear_model import LogisticRegression
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.ensemble import RandomForestClassifier
@@ -8,69 +8,68 @@ from sklearn.neural_network import MLPClassifier
 from sklearn.pipeline import Pipeline, make_pipeline
 from sklearn.preprocessing import StandardScaler
 from sklearn.model_selection import GridSearchCV, StratifiedKFold
-
+import numpy as np
 
 def get_classifiers_names():
     names = [
-            #"Naive Bayes",
             "Dummy",
-            "Linear SVM",
+            "SVM",
             "Logistic Regression",
-            "Multilayer Perceptron",
-            # "Decision Trees"
-            #"Random Forest"
+            "Random Forest"
             ]
     return names
 
 def get_classifiers(random_seed):
     classifiers = [
-        # GaussianNB(),
         DummyClassifier(random_state=random_seed),
-        LinearSVC(random_state=random_seed),
+        SVC(random_state=random_seed),
         LogisticRegression(random_state=random_seed),
-        MLPClassifier(random_state=random_seed),
-        # DecisionTreeClassifier(random_state=random_seed)
-        #RandomForestClassifier(random_state=random_seed)
+        RandomForestClassifier(random_state=random_seed)
     ]
     return classifiers
 
 
-def get_parameters():
+def get_categorical_parameters():
     parameters = [
-                    # {},# naive bayes
                     {
                         "strategy": ["stratified", "most_frequent", "prior", "uniform"]
                     }, # dummy
                     {   # SVM
-                        #"dual": [True, False],
-                        "C": [1.0],
-                        "class_weight": ["balanced"],
-                        "max_iter": [1000] # default 1000
+                        "kernel": ["linear", "poly", "rbf"],
+                        "class_weight": [None, "balanced"],
+                        "gamma": ["scale", "auto"],
+                        "decision_function_shape": ["ovo", "ovr"]
                     },
                     {   # logistic regression
-                        "C": [20],
+                        "penalty": ["l1", "l2", "elasticnet", "none"],
+                        "multi_class":["ovr", "multinomial"],
                         "class_weight": [None, "balanced"],
-                        #"solver": ["lbfgs", "newton-cg"],
-                        "max_iter": [500] # default 100
+                        "solver": ["lbfgs", "newton-cg"],
                     },
-                    {   # mlp
-                        "hidden_layer_sizes": [(256, 128)],
-                        #"activation": ["relu", "logistic"],
-                        "solver": ["adam"],
-                        #"alpha": [1e-4, 5e-3, 5e-4, 1e-3],
-                        "batch_size": [16],
-                        "learning_rate": ["adaptive"],
-                        "learning_rate_init": [1e-4],
-                        "max_iter": [200],# default 200
-                        #"momentum": [0.9, 0.5],
-                        #"early_stopping": [False, True]
+                    {   # random forest
+                        "criterion": ["gini", "entropy"],
+                        "class_weight": [None, "balanced", "balanced_subsample"],
+                        "max_features": ["auto", "log2", 6, 1.0]
+                    }
+                 ]
+    return parameters
+
+def get_numerical_parameters():
+    parameters = [
+                    {   # dummy
                     },
-                    # {   # random forest
-                    #     # "n_estimators": [100, 10],
-                    #     #"criterion": ["gini", "entropy"],
-                    #     #"max_features": ["auto", "sqrt", "log2", None],
-                    #     #"class_weight": [None, "balanced", "balanced_subsample"]
-                    # }
+                    {   # SVM
+                        "degree": [3],
+                        "C": np.logspace(-6, 0, 5),
+                        "max_iter": np.linspace(1, 1000, 10, dtype=np.int64), # default 1000
+                    },
+                    {   # logistic regression
+                        "C": np.logspace(-6, 0, 5),
+                        "max_iter": np.linspace(1, 500, 10, dtype=np.int64) # default 100
+                    },
+                    {   # random forest
+                        "n_estimators": np.linspace(2, 200, 10, dtype=np.int64),
+                    }
                  ]
     return parameters
 
@@ -78,7 +77,7 @@ def select_best_models(X_train, y_train, random_seed, scoring=None, n_jobs=-1):
 
     names = get_classifiers_names()
     classifiers = get_classifiers(random_seed)
-    parameters = get_parameters()
+    parameters = get_categorical_parameters()
 
 
     for i in range(len(parameters)):

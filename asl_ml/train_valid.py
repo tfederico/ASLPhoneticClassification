@@ -1,3 +1,7 @@
+def warn(*args, **kwargs):
+    pass
+import warnings
+warnings.warn = warn
 import json
 import numpy as np
 import matplotlib.pyplot as plt
@@ -27,7 +31,7 @@ def print_labels_statistics(y):
 # MajorLocation, Movement
 
 random_seed = 87342
-metrics = ["f1_micro", "f1_macro", "f1_weighted"]
+metrics = ["f1_micro", "f1_macro"]
 test_size = 0.15
 
 drop_features_lr = ["Heel", "Knee", "Hip", "Toe", "Pinkie", "Ankle"]
@@ -38,40 +42,35 @@ labels = ["Movement", "MajorLocation", "SignType"]
 for label in labels:
     print("Label {}".format(label))
     X, y, le = preprocess_dataset(label, drop_feat_lr=drop_features_lr,
-                                    drop_feat_center=drop_features_center,
+                                    drop_feat_center=drop_features_center, different_length=True,
                                     trick_maj_loc=False)
     #print_labels_statistics(y)
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=test_size, random_state=random_seed, shuffle=True, stratify=y)
     for metric in metrics:
-        best_clfs, best_params, tr_scores, val_scores, best_indeces = select_best_models(X_train, y_train, random_seed, scoring=metric, n_jobs=8)
+        best_clfs, best_params, tr_scores, val_scores, best_indeces = select_best_models(X_train, y_train, random_seed, scoring=metric, n_jobs=-1)
         ncols = max(int(round(len(best_clfs)//2)), 1)
         nrows = min(2, len(best_clfs))
-        fig, ax = plt.subplots(nrows=nrows, ncols=ncols, figsize=(30, 24))
 
         for i, (name, clf) in enumerate(best_clfs.items()):
             y_pred = best_clfs[name].predict(X_test)
             cm = confusion_matrix(y_test, y_pred)
             cmn = cm.astype('float') / cm.sum(axis=1)[:, np.newaxis]
+            f, ax = plt.subplots()
             sns.heatmap(cmn, vmin=0, vmax=1, annot=True, fmt='.2f', cmap="Blues",
                         square=True, xticklabels=le.classes_,
-                        yticklabels=le.classes_, ax=ax[i//ncols][i%ncols] if ncols > 1 else ax[i] if nrows > 1 else ax)
-
-            title = name if name != "Dummy" else name + " - " + best_params["Dummy"]["clf__strategy"]
-            title += " (tr {:.02f}".format(tr_scores[name][best_indeces[name]])
-            title += " val {:.02f} ".format(val_scores[name][best_indeces[name]])
-            title += "te {:.02f})".format(f1_score(y_test, y_pred, average=metric.split("_")[-1]))
-            if ncols > 1 and nrows > 1:
-                ax[i // ncols][i % ncols].set_xlabel("Predicted")
-                ax[i // ncols][i % ncols].set_ylabel("Actual")
-                ax[i//ncols][i%ncols].set_title(title)
-            elif nrows > 1:
-                ax[i].set_xlabel("Predicted")
-                ax[i].set_ylabel("Actual")
-                ax[i].set_title(title)
+                        yticklabels=le.classes_, ax=ax)
+            if name == "Dummy":
+                title = name + " - " + best_params["Dummy"]["clf__strategy"]
+            elif name == "SVM":
+                title = name + " - " + best_params["SVM"]["clf__kernel"]
             else:
-                ax.set_xlabel("Predicted")
-                ax.set_ylabel("Actual")
-                ax.set_title(title)
-        plt.savefig("{}_{}.pdf".format(label, metric), format="pdf")
-        with open("{}_{}.json".format(label, metric), "w") as fp:
+                title = name
+            title += " (tr {:.02f}".format(tr_scores[name][best_indeces[name]])
+            title += " val {:.02f})".format(val_scores[name][best_indeces[name]])
+
+            ax.set_xlabel("Predicted")
+            ax.set_ylabel("Actual")
+            ax.set_title(title)
+            plt.savefig("valid_results/{}/{}_{}.pdf".format(name, label, metric), format="pdf")
+        with open("valid_results/{}_{}.json".format(label, metric), "w") as fp:
             json.dump(best_params, fp)

@@ -88,17 +88,17 @@ from tqdm import tqdm
 param_grid_mlp = dict(
     model=["mlp"],
     n_layers=[0],
-    n_lin_layers=[2, 3, 4, 5],
-    hidden_dim=[64, 128, 256, 512, 1024],
+    n_lin_layers=[2],
+    hidden_dim=[512],
     dropout=[0.0],
-    lin_dropout=[0.0],
-    weighted_loss=[True, False],
+    lin_dropout=[0.0, 0.2, 0.4, 0.6, 0.8],
+    weighted_loss=[False],
     optimizer=["adam"],
     lr=[1e-4],
     step_size=[200],
     gamma=[0.1],
     interpolated=[True],
-    batch_norm=[True, False]
+    batch_norm=[True]
 )
 
 param_grid_lstm = dict(
@@ -140,7 +140,7 @@ cmd = ""
 
 n_gpus = 8
 for elem in tqdm(grid):
-    cmd += "python train_lstm.py --n_layers {} --n_lin_layers {} --hidden_dim {} --dropout {} ".format(elem["n_layers"],
+    cmd += "python -m asl_dl.train_lstm --n_layers {} --n_lin_layers {} --hidden_dim {} --dropout {} ".format(elem["n_layers"],
                                                                                                         elem["n_lin_layers"],
                                                                                                         elem["hidden_dim"],
                                                                                                         elem["dropout"])

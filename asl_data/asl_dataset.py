@@ -14,7 +14,7 @@ class ASLDataset(Dataset):
         self.labels_path = path.join(dir_path, labels_path)
         self.transform = transform
         self.different_length = different_length
-        self.pad_end = True
+        self.pad_end = False
         self.max_length = -1
         self.motions = []
         self.motions_keys = []

@@ -14,7 +14,7 @@ import adabound
 from asl_dl.parser import get_parser
 import json
 
-SEED = 13
+SEED = 429874
 
 torch.manual_seed(SEED)
 np.random.seed(SEED)

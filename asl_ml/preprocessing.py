@@ -71,7 +71,7 @@ def trick_major_location(y):
     return y
 
 
-def preprocess_dataset(labels, drop_feat_lr, drop_feat_center, trick_maj_loc=False):
+def preprocess_dataset(labels, drop_feat_lr, drop_feat_center, different_length = False, trick_maj_loc=False):
     ## Joints names
     # Heel, Knee, Hip, Wrist, Elbow, Shoulder, Neck, Head, Nose,
     # Eye, Ear, Toe, Pinkie, Ankle, Hip.Center
@@ -84,8 +84,8 @@ def preprocess_dataset(labels, drop_feat_lr, drop_feat_center, trick_maj_loc=Fal
     drop_features = [f+s for f in drop_features for s in [".L", ".R"]]
     drop_features += drop_feat_center
     drop_features = [f+a for f in drop_features for a in ["_x", "_y", "_z"]]
-    dataset = ASLDataset("interpolated_csvs",
-                            "reduced_SignData.csv", sel_labels=labels, drop_features=drop_features)
+    dataset = ASLDataset("interpolated_csvs" if not different_length else "csvs",
+                            "reduced_SignData.csv", sel_labels=labels, drop_features=drop_features, different_length=different_length)
     X = dataset[:][0] # shape (n_clip, n_frames, n_joints)
     y = dataset[:][1] # shape (n_clip, n_labels)
     flatted_X = []
