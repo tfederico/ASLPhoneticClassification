@@ -6,12 +6,11 @@ import json
 import numpy as np
 import matplotlib.pyplot as plt
 from sklearn.metrics import confusion_matrix
-from sklearn.metrics import f1_score
 from sklearn.model_selection import train_test_split
 from asl_ml.preprocessing import preprocess_dataset
 from asl_ml.model_selection import select_best_models
 import seaborn as sns
-
+import os
 
 def print_labels_statistics(y):
     diff_y, counts = np.unique(y, return_counts=True)
@@ -31,6 +30,7 @@ def print_labels_statistics(y):
 # MajorLocation, Movement
 
 random_seed = 87342
+
 metrics = ["f1_micro", "f1_macro"]
 test_size = 0.15
 
@@ -38,6 +38,10 @@ drop_features_lr = ["Heel", "Knee", "Hip", "Toe", "Pinkie", "Ankle"]
 drop_features_center = ["Hip.Center"]
 
 labels = ["Movement", "MajorLocation", "SignType"]
+
+
+if not os.path.exists("valid_results"):
+    os.makedirs("valid_results")
 
 for label in labels:
     print("Label {}".format(label))
@@ -52,6 +56,8 @@ for label in labels:
         nrows = min(2, len(best_clfs))
 
         for i, (name, clf) in enumerate(best_clfs.items()):
+            if not os.path.exists("valid_results/{}".format(name)):
+                os.makedirs("valid_results/{}".format(name))
             y_pred = best_clfs[name].predict(X_test)
             cm = confusion_matrix(y_test, y_pred)
             cmn = cm.astype('float') / cm.sum(axis=1)[:, np.newaxis]

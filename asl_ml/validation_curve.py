@@ -12,7 +12,6 @@ from asl_ml.model_selection import get_classifiers, get_classifiers_names, get_n
 
 random_seed = 87342
 
-metrics = ["f1_micro"]
 test_size = 0.15
 
 drop_features_lr = ["Heel", "Knee", "Hip", "Toe", "Pinkie", "Ankle"]
