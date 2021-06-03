@@ -14,7 +14,7 @@ random_seeds = [1483533434, 3708593420, 1435909850, 1717893437, 2058363314, 3759
 print("Number of different seeds:", len(random_seeds))
 
 clf = LogisticRegression
-params = {"clf__class_weight": "balanced", "clf__multi_class": "ovr", "clf__penalty": "l2", "clf__solver": "newton-cg", "max_iter": 50}
+params = {"clf__class_weight": "balanced", "clf__multi_class": "multinomial", "clf__penalty": "l2", "clf__solver": "newton-cg", "max_iter": 10}
 params = {k.replace("clf__", ""): v for k, v in params.items()}
 metrics = ["micro"]
 labels = ["MajorLocation"]

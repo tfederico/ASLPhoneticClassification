@@ -13,8 +13,8 @@ import numpy as np
 def get_classifiers_names():
     names = [
             "Dummy",
-            "SVM",
             "Logistic Regression",
+            "SVM",
             "Random Forest"
             ]
     return names
@@ -22,8 +22,8 @@ def get_classifiers_names():
 def get_classifiers(random_seed):
     classifiers = [
         DummyClassifier(random_state=random_seed),
-        SVC(random_state=random_seed),
         LogisticRegression(random_state=random_seed),
+        SVC(random_state=random_seed),
         RandomForestClassifier(random_state=random_seed)
     ]
     return classifiers
@@ -34,17 +34,19 @@ def get_categorical_parameters():
                     {
                         "strategy": ["stratified", "most_frequent", "prior", "uniform"]
                     }, # dummy
+                    {  # logistic regression
+                        "penalty": ["l1", "l2"],
+                        "multi_class": ["ovr", "multinomial"],
+                        "class_weight": [None, "balanced"],
+                        "solver": ["liblinear", "lbfgs", "newton-cg"],
+                        "max_iter": [20]
+                    },
                     {   # SVM
                         "kernel": ["linear", "poly", "rbf"],
                         "class_weight": [None, "balanced"],
                         "gamma": ["scale", "auto"],
-                        "decision_function_shape": ["ovo", "ovr"]
-                    },
-                    {   # logistic regression
-                        "penalty": ["l1", "l2", "elasticnet", "none"],
-                        "multi_class":["ovr", "multinomial"],
-                        "class_weight": [None, "balanced"],
-                        "solver": ["lbfgs", "newton-cg"],
+                        "decision_function_shape": ["ovo", "ovr"],
+                        "max_iter": [250]
                     },
                     {   # random forest
                         "criterion": ["gini", "entropy"],
@@ -58,17 +60,17 @@ def get_numerical_parameters():
     parameters = [
                     {   # dummy
                     },
+                    {  # logistic regression
+                        "C": np.logspace(-4, 2, 5),
+                        "max_iter": np.linspace(1, 300, 10, dtype=np.int64)  # default 100
+                    },
                     {   # SVM
                         "degree": [3],
-                        "C": np.logspace(-6, 0, 5),
-                        "max_iter": np.linspace(1, 1000, 10, dtype=np.int64) # default 1000
-                    },
-                    {   # logistic regression
-                        "C": np.logspace(-6, 0, 5),
-                        "max_iter": np.linspace(1, 500, 10, dtype=np.int64) # default 100
+                        "C": np.logspace(-4, 2, 5),
+                        "max_iter": np.linspace(1, 250, 10, dtype=np.int64) # default 1000
                     },
                     {   # random forest
-                        "n_estimators": np.linspace(2, 200, 10, dtype=np.int64),
+                        "n_estimators": np.linspace(2, 100, 10, dtype=np.int64),
                         "max_features": np.linspace(0.01, 1.0, 10)
                     }
                  ]
