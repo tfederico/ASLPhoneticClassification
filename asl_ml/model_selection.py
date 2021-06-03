@@ -61,7 +61,7 @@ def get_numerical_parameters():
                     {   # SVM
                         "degree": [3],
                         "C": np.logspace(-6, 0, 5),
-                        "max_iter": np.linspace(1, 1000, 10, dtype=np.int64), # default 1000
+                        "max_iter": np.linspace(1, 1000, 10, dtype=np.int64) # default 1000
                     },
                     {   # logistic regression
                         "C": np.logspace(-6, 0, 5),
@@ -105,7 +105,7 @@ def select_best_models(X_train, y_train, random_seed, scoring=None, n_jobs=-1):
             ('clf', classifier),
         ])
         cv = StratifiedKFold(n_splits=5, shuffle=True, random_state=random_seed)
-        gs_clf = GridSearchCV(clf_pipe, param_grid=params, cv=cv, refit=True,
+        gs_clf = GridSearchCV(clf_pipe, param_grid=params, cv=cv, refit=False,
                                 scoring=scoring, n_jobs=n_jobs, verbose=0, return_train_score=True)
         gs_clf.fit(X_train, y_train)
         best_clfs[name] = gs_clf.best_estimator_

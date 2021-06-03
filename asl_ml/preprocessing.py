@@ -1,6 +1,5 @@
 import numpy as np
 from asl_data.asl_dataset import ASLDataset
-from sklearn.preprocessing import LabelEncoder
 
 ## Possible labels
 # Compound, Initialized, FingerspelledLoanSign, SignType, MajorLocation,
@@ -96,6 +95,4 @@ def preprocess_dataset(labels, drop_feat_lr, drop_feat_center, different_length 
     if trick_maj_loc:
         y = trick_major_location(y)
     # y = fix_labels(labels, y)
-    le = LabelEncoder()
-    y = le.fit_transform(y)
-    return X, y, le
+    return X, y

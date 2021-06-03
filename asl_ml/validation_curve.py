@@ -11,7 +11,7 @@ import json
 from asl_ml.model_selection import get_classifiers, get_classifiers_names, get_numerical_parameters
 
 random_seed = 87342
-different_length = False
+different_length = True
 
 test_size = 0.15
 
@@ -19,7 +19,7 @@ drop_features_lr = ["Heel", "Knee", "Hip", "Toe", "Pinkie", "Ankle"]
 drop_features_center = ["Hip.Center"]
 
 labels = ["Movement", "MajorLocation", "SignType"]
-metrics = ["f1_micro", "f1_macro"]
+metrics = ["f1_micro"]
 
 models_dict = dict(zip(get_classifiers_names(), get_classifiers(random_seed)))
 models_dict.pop("Dummy")
@@ -29,15 +29,15 @@ params_dict.pop("Dummy")
 
 for label in labels:
     print("Label {}".format(label))
-    X, y, le = preprocess_dataset(label, drop_feat_lr=drop_features_lr,
+    X, y = preprocess_dataset(label, drop_feat_lr=drop_features_lr,
                                     drop_feat_center=drop_features_center, different_length=different_length,
                                     trick_maj_loc=False)
     #print_labels_statistics(y)
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=test_size, random_state=random_seed, shuffle=True, stratify=y)
-    
-    for model, clf in models_dict.items():
-        for metric in metrics:
-            with open("valid_results/{}_{}.json".format(label, metric), "r") as fp:
+    for metric in metrics:
+        with open("valid_results/{}_{}.json".format(label, metric), "r") as fp:
+            for model, clf in models_dict.items():
+
                 best_params = {k.replace("clf__", ""): v for k, v in json.load(fp)[model].items()}
                 clf.set_params(**best_params)
                 for param_name, param_range in params_dict[model].items():

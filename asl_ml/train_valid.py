@@ -30,9 +30,9 @@ def print_labels_statistics(y):
 # MajorLocation, Movement
 
 random_seed = 87342
-different_length = False
+different_length = True
 
-metrics = ["f1_micro", "f1_macro"]
+metrics = ["f1_micro"]
 test_size = 0.15
 
 drop_features_lr = ["Heel", "Knee", "Hip", "Toe", "Pinkie", "Ankle"]
@@ -46,15 +46,15 @@ if not os.path.exists("valid_results"):
 
 for label in labels:
     print("Label {}".format(label))
-    X, y, le = preprocess_dataset(label, drop_feat_lr=drop_features_lr,
+    X, y = preprocess_dataset(label, drop_feat_lr=drop_features_lr,
                                     drop_feat_center=drop_features_center, different_length=different_length,
                                     trick_maj_loc=False)
     #print_labels_statistics(y)
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=test_size, random_state=random_seed, shuffle=True, stratify=y)
     for metric in metrics:
         best_clfs, best_params, tr_scores, val_scores, best_indeces = select_best_models(X_train, y_train, random_seed, scoring=metric, n_jobs=-1)
-        ncols = max(int(round(len(best_clfs)//2)), 1)
-        nrows = min(2, len(best_clfs))
+        ncols = 1
+        nrows = 1
 
         for i, (name, clf) in enumerate(best_clfs.items()):
             if not os.path.exists("valid_results/{}".format(name)):
@@ -64,8 +64,7 @@ for label in labels:
             cmn = cm.astype('float') / cm.sum(axis=1)[:, np.newaxis]
             f, ax = plt.subplots()
             sns.heatmap(cmn, vmin=0, vmax=1, annot=True, fmt='.2f', cmap="Blues",
-                        square=True, xticklabels=le.classes_,
-                        yticklabels=le.classes_, ax=ax)
+                        square=True, ax=ax)
             if name == "Dummy":
                 title = name + " - " + best_params["Dummy"]["clf__strategy"]
             elif name == "SVM":
