@@ -65,13 +65,14 @@ def get_numerical_parameters():
                         "max_iter": np.linspace(1, 300, 10, dtype=np.int64)  # default 100
                     },
                     {   # SVM
-                        "degree": [3],
+                        "degree": [2],
                         "C": np.logspace(-4, 2, 5),
                         "max_iter": np.linspace(1, 250, 10, dtype=np.int64) # default 1000
                     },
                     {   # random forest
                         "n_estimators": np.linspace(2, 100, 10, dtype=np.int64),
-                        "max_features": np.linspace(0.01, 1.0, 10)
+                        "max_features": np.linspace(0.01, 1.0, 10),
+                        "depth":  np.linspace(1, 10, 10)
                     }
                  ]
     return parameters

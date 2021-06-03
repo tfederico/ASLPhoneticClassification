@@ -1,12 +1,12 @@
 from sklearn.model_selection import validation_curve
 from sklearn.model_selection import train_test_split
 from asl_ml.preprocessing import preprocess_dataset
-from sklearn.linear_model import LogisticRegression
-from sklearn.svm import SVC
 import matplotlib.pyplot as plt
 import numpy as np
 import json
 from asl_ml.model_selection import get_classifiers, get_classifiers_names, get_numerical_parameters
+from sklearn.model_selection import StratifiedKFold
+
 
 random_seed = 87342
 different_length = True
@@ -39,9 +39,10 @@ for label in labels:
                 best_params = {k.replace("clf__", ""): v for k, v in json.load(fp)[model].items()}
                 clf.set_params(**best_params)
                 for param_name, param_range in params_dict[model].items():
+                        cv = StratifiedKFold(n_splits=5, shuffle=True, random_state=random_seed)
                         train_scores, valid_scores = validation_curve(clf, X_train, y_train, param_name=param_name,
                                                                       param_range=param_range, scoring=metric, n_jobs=-1,
-                                                                      cv=5)
+                                                                      cv=cv)
 
                         train_scores_mean = np.mean(train_scores, axis=1)
                         train_scores_std = np.std(train_scores, axis=1)
@@ -50,7 +51,7 @@ for label in labels:
 
                         fig = plt.figure()
                         plt.title("Validation Curve")
-                        plt.xlabel("Iters")
+                        plt.xlabel("Parameter")
                         plt.ylabel("Score")
                         plt.ylim(0.0, 1.1)
                         lw = 2
