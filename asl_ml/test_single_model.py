@@ -3,7 +3,7 @@ from sklearn.metrics import f1_score
 from sklearn.model_selection import train_test_split
 from asl_ml.preprocessing import preprocess_dataset
 from sklearn.linear_model import LogisticRegression
-
+from sklearn.ensemble import RandomForestClassifier
 
 test_size = 0.15
 

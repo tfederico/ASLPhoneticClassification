@@ -33,9 +33,8 @@ for label in labels:
     #print_labels_statistics(y)
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=test_size, random_state=random_seed, shuffle=True, stratify=y)
     for metric in metrics:
-        with open("valid_results/{}_{}.json".format(label, metric), "r") as fp:
-            for model, clf in models_dict.items():
-
+        for model, clf in models_dict.items():
+            with open("valid_results/{}/{}_{}.json".format(model, label, metric), "r") as fp:
                 best_params = {k.replace("clf__", ""): v for k, v in json.load(fp)[model].items()}
                 clf.set_params(**best_params)
                 for param_name, param_range in params_dict[model].items():

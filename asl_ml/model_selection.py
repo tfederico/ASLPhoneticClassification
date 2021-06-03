@@ -39,7 +39,7 @@ def get_categorical_parameters():
                         "multi_class": ["ovr", "multinomial"],
                         "class_weight": [None, "balanced"],
                         "solver": ["liblinear", "lbfgs", "newton-cg"],
-                        "max_iter": [20]
+                        "max_iter": [100]
                     },
                     {   # SVM
                         "kernel": ["linear", "poly", "rbf"],
@@ -51,7 +51,8 @@ def get_categorical_parameters():
                     {   # random forest
                         "criterion": ["gini", "entropy"],
                         "class_weight": [None, "balanced", "balanced_subsample"],
-                        "max_features": ["auto", "log2", 6, 1.0]
+                        "max_features": [1.0],
+                        "max_depth": [8]
                     }
                  ]
     return parameters
