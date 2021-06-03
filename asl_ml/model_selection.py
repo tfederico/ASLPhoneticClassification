@@ -72,7 +72,7 @@ def get_numerical_parameters():
                     {   # random forest
                         "n_estimators": np.linspace(2, 100, 10, dtype=np.int64),
                         "max_features": np.linspace(0.01, 1.0, 10),
-                        "depth":  np.linspace(1, 10, 10)
+                        "max_depth":  np.linspace(1, 10, 10)
                     }
                  ]
     return parameters
