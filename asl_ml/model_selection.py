@@ -79,7 +79,7 @@ def get_all_parameters():
                         "class_weight": [None, "balanced"],
                         "solver": ["liblinear", "lbfgs", "newton-cg"],
                         "max_iter": [100],
-                        "C": np.logspace(-4, 2, 5),
+                        "C": np.logspace(-4, 2, 5).tolist()
                     },
                     {   # SVM
                         "kernel": ["linear", "poly", "rbf"],
@@ -88,14 +88,14 @@ def get_all_parameters():
                         "decision_function_shape": ["ovo", "ovr"],
                         "max_iter": [250],
                         "degree": [2, 3, 4],
-                        "C": np.logspace(-4, 2, 5),
+                        "C": np.logspace(-4, 2, 5).tolist(),
                     },
                     {   # random forest
                         "criterion": ["gini", "entropy"],
                         "class_weight": [None, "balanced", "balanced_subsample"],
-                        "n_estimators": np.linspace(2, 100, 5, dtype=np.int64),
-                        "max_features": np.linspace(0.01, 1.0, 5),
-                        "max_depth": np.linspace(1, 10, 3)
+                        "n_estimators": np.linspace(2, 200, 3, dtype=np.int64).tolist(),
+                        "max_features": np.linspace(0.01, 1.0, 3).tolist(),
+                        "max_depth": np.linspace(1, 10, 3).tolist()
                     }
                  ]
     return parameters
