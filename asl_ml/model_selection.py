@@ -7,7 +7,7 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.neural_network import MLPClassifier
 from sklearn.pipeline import Pipeline, make_pipeline
 from sklearn.preprocessing import StandardScaler
-from sklearn.model_selection import GridSearchCV, StratifiedKFold
+from sklearn.model_selection import GridSearchCV, StratifiedKFold, RepeatedStratifiedKFold
 import numpy as np
 
 def get_classifiers_names():
@@ -21,7 +21,6 @@ def get_classifiers_names():
 
 def get_classifiers(random_seed):
     classifiers = [
-        DummyClassifier(random_state=random_seed),
         LogisticRegression(random_state=random_seed),
         SVC(random_state=random_seed),
         RandomForestClassifier(random_state=random_seed)
@@ -31,9 +30,6 @@ def get_classifiers(random_seed):
 
 def get_categorical_parameters():
     parameters = [
-                    {
-                        "strategy": ["stratified", "most_frequent", "prior", "uniform"]
-                    }, # dummy
                     {  # logistic regression
                         "penalty": ["l1", "l2"],
                         "multi_class": ["ovr", "multinomial"],
@@ -59,14 +55,12 @@ def get_categorical_parameters():
 
 def get_numerical_parameters():
     parameters = [
-                    {   # dummy
-                    },
                     {  # logistic regression
                         "C": np.logspace(-4, 2, 5),
                         "max_iter": np.linspace(1, 300, 10, dtype=np.int64)  # default 100
                     },
                     {   # SVM
-                        "degree": [2],
+                        "degree": [2, 3, 4],
                         "C": np.logspace(-4, 2, 5),
                         "max_iter": np.linspace(1, 250, 10, dtype=np.int64) # default 1000
                     },
@@ -78,11 +72,42 @@ def get_numerical_parameters():
                  ]
     return parameters
 
+def get_all_parameters():
+    parameters = [
+                    {  # logistic regression
+                        "penalty": ["l1", "l2"],
+                        "multi_class": ["ovr", "multinomial"],
+                        "class_weight": [None, "balanced"],
+                        "solver": ["liblinear", "lbfgs", "newton-cg"],
+                        "max_iter": [100],
+                        "C": np.logspace(-4, 2, 5),
+                    },
+                    {   # SVM
+                        "kernel": ["linear", "poly", "rbf"],
+                        "class_weight": [None, "balanced"],
+                        "gamma": ["scale", "auto"],
+                        "decision_function_shape": ["ovo", "ovr"],
+                        "max_iter": [250],
+                        "degree": [2, 3, 4],
+                        "C": np.logspace(-4, 2, 5),
+                    },
+                    {   # random forest
+                        "criterion": ["gini", "entropy"],
+                        "class_weight": [None, "balanced", "balanced_subsample"],
+                        "n_estimators": np.linspace(2, 100, 5, dtype=np.int64),
+                        "max_features": np.linspace(0.01, 1.0, 5),
+                        "max_depth": np.linspace(1, 10, 3)
+                    }
+                 ]
+    return parameters
+
+
+
 def select_best_models(X_train, y_train, random_seed, scoring=None, n_jobs=-1):
 
     names = get_classifiers_names()
     classifiers = get_classifiers(random_seed)
-    parameters = get_categorical_parameters()
+    parameters = get_all_parameters()
 
 
     for i in range(len(parameters)):
@@ -109,6 +134,7 @@ def select_best_models(X_train, y_train, random_seed, scoring=None, n_jobs=-1):
             ('clf', classifier),
         ])
         cv = StratifiedKFold(n_splits=5, shuffle=True, random_state=random_seed)
+
         gs_clf = GridSearchCV(clf_pipe, param_grid=params, cv=cv, refit=True,
                                 scoring=scoring, n_jobs=n_jobs, verbose=0, return_train_score=True)
         gs_clf.fit(X_train, y_train)
