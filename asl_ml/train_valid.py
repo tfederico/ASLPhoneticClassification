@@ -78,5 +78,5 @@ for label in labels:
             ax.set_ylabel("Actual")
             ax.set_title(title)
             plt.savefig("valid_results/{}/{}_{}.pdf".format(name, label, metric), format="pdf")
-            with open("valid_results/{}/{}_{}.pdf".format(name, label, metric), "w") as fp:
+            with open("valid_results/{}/{}_{}.json".format(name, label, metric), "w") as fp:
                 json.dump(best_params, fp)

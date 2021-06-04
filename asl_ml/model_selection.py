@@ -109,7 +109,7 @@ def select_best_models(X_train, y_train, random_seed, scoring=None, n_jobs=-1):
             ('clf', classifier),
         ])
         cv = StratifiedKFold(n_splits=5, shuffle=True, random_state=random_seed)
-        gs_clf = GridSearchCV(clf_pipe, param_grid=params, cv=cv, refit=False,
+        gs_clf = GridSearchCV(clf_pipe, param_grid=params, cv=cv, refit=True,
                                 scoring=scoring, n_jobs=n_jobs, verbose=0, return_train_score=True)
         gs_clf.fit(X_train, y_train)
         best_clfs[name] = gs_clf.best_estimator_
