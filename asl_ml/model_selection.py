@@ -12,7 +12,6 @@ import numpy as np
 
 def get_classifiers_names():
     names = [
-            "Dummy",
             "Logistic Regression",
             "SVM",
             "Random Forest"
