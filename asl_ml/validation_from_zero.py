@@ -20,10 +20,8 @@ labels = ["Movement", "MajorLocation", "SignType"]
 metrics = ["f1_micro"]
 
 models_dict = dict(zip(get_classifiers_names(), get_classifiers(random_seed)))
-models_dict.pop("Dummy")
 
 params_dict = dict(zip(get_classifiers_names(), get_numerical_parameters()))
-params_dict.pop("Dummy")
 
 for label in labels:
     print("Label {}".format(label))

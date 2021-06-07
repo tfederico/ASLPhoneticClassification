@@ -33,7 +33,7 @@ for label in labels:
     for metric in metrics:
         for model, clf in models_dict.items():
             with open("valid_results/{}/{}_{}.json".format(model, label, metric), "r") as fp:
-                best_params = {k.replace("clf__", ""): v for k, v in json.load(fp)[model].items()}
+                best_params = {k.replace("clf__", ""): v for k, v in json.load(fp).items()}
                 clf.set_params(**best_params)
                 for param_name, param_range in params_dict[model].items():
                         cv = StratifiedKFold(n_splits=5, shuffle=True, random_state=random_seed)
