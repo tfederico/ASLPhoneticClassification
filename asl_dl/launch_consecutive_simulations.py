@@ -88,71 +88,59 @@ from tqdm import tqdm
 param_grid_mlp = dict(
     model=["mlp"],
     n_layers=[0],
-    n_lin_layers=[2],
-    hidden_dim=[512],
+    n_lin_layers=[2, 3, 4],
+    hidden_dim=[64, 128],
     dropout=[0.0],
-    lin_dropout=[0.0, 0.2, 0.4, 0.6, 0.8],
-    weighted_loss=[False],
+    lin_dropout=[0.0, 0.25, 0.5],
+    bidirectional=[False],
+    epochs=[200],
+    batch_size=[16, 32, 64, 128],
+    weighted_loss=[False, True],
     optimizer=["adam"],
     lr=[1e-4],
+    final_lr=[1e-4],
+    momentum=[0.0],
     step_size=[200],
     gamma=[0.1],
-    interpolated=[True],
-    batch_norm=[True]
+    interpolated=[True, False],
+    batch_norm=[True, False],
+    seed=[13]
 )
 
 param_grid_lstm = dict(
-    model=["lstm"],
-    n_layers=[3],
-    n_lin_layers=[0],
-    hidden_dim=[256, 1024],
-    dropout=[i/10 for i in range(0, 9)],
-    lin_dropout=[0.0],
+    model=["lstm", "gru"],
+    n_layers=[1, 2, 3],
+    n_lin_layers=[0, 1, 2],
+    hidden_dim=[64, 128, 256],
+    dropout=[0.0, 0.2, 0.4, 0.6, 0.8],
+    lin_dropout=[0.0, 0.2, 0.4, 0.6, 0.8],
+    bidirectional=[False, True],
+    epochs=[100, 200],
+    batch_size=[16, 32, 64, 128, 256],
     weighted_loss=[False],
     optimizer=["adam"],
     lr=[1e-4],
-    step_size=[300],
+    final_lr=[1e-4],
+    momentum=[0.0],
+    step_size=[200],
     gamma=[0.1],
-    interpolated=[False]
-)
-
-param_grid_gru = dict(
-    model=["gru"],
-    n_layers=[3],
-    n_lin_layers=[0],
-    hidden_dim=[128],
-    dropout=[i/10 for i in range(0, 9)],
-    lin_dropout=[i/10 for i in range(0, 9)],
-    weighted_loss=[False],
-    optimizer=["adam"],
-    lr=[1e-4],
-    step_size=[300],
-    gamma=[0.1],
-    interpolated=[False]
+    interpolated=[True, False],
+    batch_norm=[True],
+    seed=[13]
 )
 
 mlp_grid = list(ParameterGrid(param_grid_mlp))
 lstm_grid = list(ParameterGrid(param_grid_lstm))
-gru_grid = list(ParameterGrid(param_grid_gru))
-grid = mlp_grid #+ lstm_grid + gru_grid
+
+grid = mlp_grid #+ lstm_grid
 
 cmd = ""
 
-n_gpus = 8
 for elem in tqdm(grid):
-    cmd += "python -m asl_dl.train_lstm --n_layers {} --n_lin_layers {} --hidden_dim {} --dropout {} ".format(elem["n_layers"],
-                                                                                                        elem["n_lin_layers"],
-                                                                                                        elem["hidden_dim"],
-                                                                                                        elem["dropout"])
-    cmd += "--lin_dropout {} --weighted_loss {} --optimizer {} --lr {} ".format(elem["lin_dropout"],
-                                                                                elem["weighted_loss"],
-                                                                                elem["optimizer"],
-                                                                                elem["lr"])
-    cmd += "--step_size {} --gamma {} --model {} --interpolated {} --batch_norm {}".format(elem["step_size"],
-                                                                                           elem["gamma"],
-                                                                                           elem["model"],
-                                                                                           elem["interpolated"],
-                                                                                           elem["batch_norm"])
+    cmd += "python -m asl_dl.train_lstm"
+    for k, v in elem.items():
+        cmd += " --{} {}".format(k, v)
+
     cmd += "\n"
 
 with open("commands.txt", "w") as fp:

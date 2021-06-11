@@ -4,6 +4,7 @@ from sklearn.model_selection import train_test_split
 from asl_ml.preprocessing import preprocess_dataset
 from sklearn.linear_model import LogisticRegression
 from sklearn.ensemble import RandomForestClassifier
+from sklearn.svm import SVC
 
 test_size = 0.15
 
@@ -13,11 +14,11 @@ drop_features_center = ["Hip.Center"]
 random_seeds = [1483533434, 3708593420, 1435909850, 1717893437, 2058363314, 375901956, 3122268818, 3001508778, 278900983, 4174692793]
 print("Number of different seeds:", len(random_seeds))
 
-clf = LogisticRegression
-params = {"clf__class_weight": "balanced", "clf__multi_class": "multinomial", "clf__penalty": "l2", "clf__solver": "newton-cg", "max_iter": 10}
+clf = RandomForestClassifier
+params = {"clf__class_weight": "balanced_subsample", "clf__criterion": "entropy", "clf__max_depth": 5.5, "clf__max_features": 1.0, "clf__n_estimators": 101}
 params = {k.replace("clf__", ""): v for k, v in params.items()}
 metrics = ["micro"]
-labels = ["MajorLocation"]
+labels = ["SignType"]
 
 average_results = {}
 for label in labels:

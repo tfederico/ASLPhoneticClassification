@@ -13,19 +13,14 @@ import json
 from asl_dl.train_lstm import get_loss, get_model, train_n_epochs, run_once, seed_worker
 from dotmap import DotMap
 
-SEED = 13
 
-torch.manual_seed(SEED)
-np.random.seed(SEED)
-random.seed(SEED)
-
-def retrain(args, X, y, weights, input_dim, output_dim, writer, log_dir):
-    skf = StratifiedKFold(n_splits=5, shuffle=True, random_state=SEED) # todo: fix this?
-    train_indeces, val_indeces = next(skf.split(X, y))
-    train_dataset = torch.utils.data.TensorDataset(torch.from_numpy(X[train_indeces]),
-                                                   torch.from_numpy(y[train_indeces]))
-    val_dataset = torch.utils.data.TensorDataset(torch.from_numpy(X[val_indeces]),
-                                                 torch.from_numpy(y[val_indeces]))
+def retrain(args, X, y, weights, input_dim, output_dim, writer, log_dir,):
+    X_train, X_val, y_train, y_val = train_test_split(X, y, test_size=0.15, random_state=args.seed, shuffle=True,
+                                                        stratify=y)
+    train_dataset = torch.utils.data.TensorDataset(torch.from_numpy(X_train),
+                                                   torch.from_numpy(y_train))
+    val_dataset = torch.utils.data.TensorDataset(torch.from_numpy(X_val),
+                                                 torch.from_numpy(y_val))
 
     train_loss_min, train_f1_max, valid_loss_min, valid_f1_max = train_n_epochs(args, train_dataset, val_dataset,
                                                                                 weights, input_dim, output_dim,
@@ -48,7 +43,7 @@ def test(args, X_test, y_test, weights, input_dim, output_dim, metric, log_dir):
 
 def main():
     df = pd.read_csv("runs/summary.csv", header=0, index_col=None)
-    df.sort_values('mean_val_loss', inplace=True)
+    df.sort_values('mean_val_loss', inplace=True, ascending=True)
     args = df.iloc[0].to_dict()
     args = {k: getattr(v, "tolist", lambda: v)() for k, v in args.items()}
     if "model" not in args.keys():
@@ -69,33 +64,47 @@ def main():
                          different_length=not args.interpolated)
 
     X, y = dataset[:][0], dataset[:][1]
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.15, random_state=SEED, shuffle=True, stratify=y)
 
-    input_dim = X[0].shape[1] if args.model != "mlp" else X[0].shape[0] * X[0].shape[1]
-    output_dim = len(np.unique(y))
+    seeds = [1483533434, 3708593420, 1435909850, 1717893437, 2058363314, 375901956, 3122268818, 3001508778, 278900983, 4174692793]
+    logs = {}
+    for seed in seeds:
+        args.seed = seed
+        torch.manual_seed(seed)
+        np.random.seed(seed)
+        random.seed(seed)
+        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.15, random_state=seed, shuffle=True, stratify=y)
 
-    if args.weighted_loss:
-        classes, occurrences = np.unique(dataset[:][1], return_counts=True)
-        weights = torch.FloatTensor(1. / occurrences).to(args.device)
-    else:
-        weights = None
-    train_loss_min, train_f1_max, valid_loss_min, valid_f1_max = retrain(args, X_train, y_train, weights, input_dim,
-                                                                         output_dim, None, log_dir)
-    out_log = {}
-    out_log["min_train_loss"] = train_loss_min
-    out_log["max_train_f1_score"] = train_f1_max
-    out_log["min_val_loss"] = valid_loss_min
-    out_log["max_val_f1_score"] = valid_f1_max
+        input_dim = X[0].shape[1] if args.model != "mlp" else X[0].shape[0] * X[0].shape[1]
+        output_dim = len(np.unique(y))
 
-    test_gt, test_outs = test(args, X_test, y_test, weights, input_dim, output_dim, "min_loss", log_dir)
+        if args.weighted_loss:
+            classes, occurrences = np.unique(dataset[:][1], return_counts=True)
+            weights = torch.FloatTensor(1. / occurrences).to(args.device)
+        else:
+            weights = None
+        train_loss_min, train_f1_max, valid_loss_min, valid_f1_max = retrain(args, X_train, y_train, weights, input_dim,
+                                                                             output_dim, None, log_dir)
+        out_log = {}
+        out_log["min_train_loss"] = train_loss_min
+        out_log["max_train_f1_score"] = train_f1_max
+        out_log["min_val_loss"] = valid_loss_min
+        out_log["max_val_f1_score"] = valid_f1_max
 
-    out_log["f1_score_test"] = f1_score(test_gt, test_outs, average="micro")
-    out_log["confusion_matrix"] = confusion_matrix(test_gt, test_outs).tolist()
-    out_log["normalized_cf_matrix"] = confusion_matrix(test_gt, test_outs, normalize="true").tolist()
+        test_gt, test_outs = test(args, X_test, y_test, weights, input_dim, output_dim, "min_loss", log_dir)
+
+        out_log["f1_score_test"] = f1_score(test_gt, test_outs, average="micro")
+        out_log["confusion_matrix"] = confusion_matrix(test_gt, test_outs).tolist()
+        out_log["normalized_cf_matrix"] = confusion_matrix(test_gt, test_outs, normalize="true").tolist()
+        logs[seed] = out_log
 
     with open("{}/log_file.json".format(log_dir), "w") as fp:
-        json.dump(out_log, fp)
+        json.dump(logs, fp)
 
+    tests = []
+    for k, v in logs.items():
+        tests.append(v["f1_score_test"])
+
+    print(np.mean(tests))
 
 if __name__ == '__main__':
     main()

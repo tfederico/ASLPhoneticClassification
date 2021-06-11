@@ -31,4 +31,5 @@ def get_parser():
     parser.add_argument('--gamma', default=0.1, type=float, help='gamma for lr scheduler')
     parser.add_argument('--interpolated', default=True, type=str2bool, choices=[True, False], help='using downsampled data')
     parser.add_argument('--batch_norm', default=True, type=str2bool, choices=[True, False], help='using batch_normalisation')
+    parser.add_argument('--seed', default=13, type=int, help="random seed for simulation")
     return parser

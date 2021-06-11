@@ -14,12 +14,6 @@ import adabound
 from asl_dl.parser import get_parser
 import json
 
-SEED = 429874
-
-torch.manual_seed(SEED)
-np.random.seed(SEED)
-random.seed(SEED)
-
 
 def seed_worker(worker_id):
     worker_seed = torch.initial_seed() % 2**32
@@ -135,7 +129,7 @@ def train_n_epochs(args, train_dataset, val_dataset, weights, input_dim, output_
 
 
 def perform_validation(args, X, y, weights, input_dim, output_dim, writer, log_dir):
-    skf = StratifiedKFold(n_splits=5, shuffle=True, random_state=SEED)
+    skf = StratifiedKFold(n_splits=5, shuffle=True, random_state=args.seed)
     min_train_loss_per_fold = {}
     max_train_f1_score_per_fold = {}
     min_val_loss_per_fold = {}
@@ -161,6 +155,9 @@ def perform_validation(args, X, y, weights, input_dim, output_dim, writer, log_d
 def main():
     parser = get_parser()
     args = parser.parse_args()
+    torch.manual_seed(args.seed)
+    np.random.seed(args.seed)
+    random.seed(args.seed)
     if args.interpolated:
         folder_name = "interpolated_csvs"
     else:
@@ -170,7 +167,7 @@ def main():
                          different_length=not args.interpolated)
     # print_stats(dataset)
     X, y = dataset[:][0], dataset[:][1]
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.15, random_state=SEED, shuffle=True, stratify=y)
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.15, random_state=args.seed, shuffle=True, stratify=y)
 
     input_dim = X[0].shape[1] if args.model != "mlp" else X[0].shape[0] * X[0].shape[1]
     output_dim = len(np.unique(y))

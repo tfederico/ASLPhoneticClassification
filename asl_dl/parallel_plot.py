@@ -16,7 +16,9 @@ df = df.drop(["mean_train_loss", "mean_train_f1_score"], axis=1)
 # fig = px.parallel_coordinates(df, color="mean_val_f1_score", dimensions=["hidden_dim",  "n_lin_layers"], color_continuous_scale=px.colors.diverging.Tealrose)
 # fig.show()
 
+df = df[df["model"] == 0]
 df = df.drop(["model", "bidirectional", "dropout", "lin_dropout", "gamma", "interpolated", "momentum", "n_layers", "optimizer", "step_size"], axis=1)
+
 corr = df.corr()
 
 fig = plt.figure()
