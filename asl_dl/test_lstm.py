@@ -8,9 +8,8 @@ from sklearn.metrics import f1_score
 from sklearn.metrics import confusion_matrix
 from torch.utils.tensorboard import SummaryWriter
 from torch.utils.data import DataLoader
-from sklearn.model_selection import StratifiedKFold
 import json
-from asl_dl.train_lstm import get_loss, get_model, train_n_epochs, run_once, seed_worker
+from asl_dl.train_lstm import train_n_epochs, get_loss, get_model, run_once, seed_worker
 from dotmap import DotMap
 
 
@@ -28,13 +27,13 @@ def retrain(args, X, y, weights, input_dim, output_dim, writer, log_dir,):
     return train_loss_min, train_f1_max, valid_loss_min, valid_f1_max
 
 
-def test(args, X_test, y_test, weights, input_dim, output_dim, metric, log_dir):
+def test(args, X_test, y_test, weights, input_dim, output_dim, log_dir):
     test_dataset = torch.utils.data.TensorDataset(torch.from_numpy(X_test), torch.from_numpy(y_test))
     test_loader = DataLoader(test_dataset, shuffle=False, batch_size=args.batch_size,
                              num_workers=6, drop_last=False, worker_init_fn=seed_worker)
     criterion = get_loss(weights)
     model = get_model(args, input_dim, output_dim).to(args.device)
-    model.load_state_dict(torch.load('{}/state_dict_{}.pt'.format(log_dir, metric)))
+    model.load_state_dict(torch.load('{}/state_dict_final.pt'.format(log_dir)))
     model.eval()
     test_losses, test_outs, test_gt = run_once(args, model, test_loader, criterion, None)
 
@@ -42,14 +41,13 @@ def test(args, X_test, y_test, weights, input_dim, output_dim, metric, log_dir):
 
 
 def main():
+
+    use_loss = True # true for loss, false for f1 score
+
     df = pd.read_csv("runs/summary.csv", header=0, index_col=None)
-    df.sort_values('mean_val_loss', inplace=True, ascending=True)
+    df.sort_values('mean_val_loss' if use_loss else "mean_val_f1_score", inplace=True, ascending=use_loss)
     args = df.iloc[0].to_dict()
     args = {k: getattr(v, "tolist", lambda: v)() for k, v in args.items()}
-    if "model" not in args.keys():
-        args["model"] = "lstm"
-    if "interpolated" not in args.keys():
-        args["interpolated"] = True
     args = DotMap(args)
     args.device = "cuda" if torch.cuda.is_available() else "cpu"
 
@@ -90,9 +88,10 @@ def main():
         out_log["min_val_loss"] = valid_loss_min
         out_log["max_val_f1_score"] = valid_f1_max
 
-        test_gt, test_outs = test(args, X_test, y_test, weights, input_dim, output_dim, "min_loss", log_dir)
+        test_gt, test_outs = test(args, X_test, y_test, weights, input_dim, output_dim, log_dir)
 
         out_log["f1_score_test"] = f1_score(test_gt, test_outs, average="micro")
+        print("Test score for current seed:", out_log["f1_score_test"])
         out_log["confusion_matrix"] = confusion_matrix(test_gt, test_outs).tolist()
         out_log["normalized_cf_matrix"] = confusion_matrix(test_gt, test_outs, normalize="true").tolist()
         logs[seed] = out_log
@@ -104,7 +103,7 @@ def main():
     for k, v in logs.items():
         tests.append(v["f1_score_test"])
 
-    print(np.mean(tests))
+    print(np.mean(tests), np.std(tests))
 
 if __name__ == '__main__':
     main()

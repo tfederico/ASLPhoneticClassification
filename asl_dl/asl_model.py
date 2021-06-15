@@ -54,7 +54,7 @@ class ASLModel(nn.Module):
                             hidden_size=self.hidden_dim if (self.num_layers > 1 or self.n_lin_layers > 0) else self.output_dim,
                             num_layers=self.num_layers-1 if (self.n_lin_layers == 0 and self.num_layers > 1) else self.num_layers,
                             bias=True, batch_first=self.batch_first,
-                            dropout=self.dropout, bidirectional=self.bidirectional)
+                            dropout=self.dropout if self.num_layers > 2 else 0., bidirectional=self.bidirectional)
 
         i = -1
         linear_layers = []
@@ -65,19 +65,21 @@ class ASLModel(nn.Module):
             if self.batch_norm:
                 linear_layers.append(nn.BatchNorm1d(self.hidden_dim//2**i))
 
-
         if self.n_lin_layers > 0:
             self.last_layer = nn.Sequential(
                 *linear_layers,
                 nn.Linear(self.hidden_dim//2**i if self.n_lin_layers > 1 else self.hidden_dim,
-                            self.output_dim)
+                          self.output_dim)
             )
         elif self.n_lin_layers == 0 and self.num_layers > 1:
-            self.last_layer = nn.LSTM(input_size=self.hidden_dim*2 if self.bidirectional else self.hidden_dim,
-                                      hidden_size=self.output_dim,
-                                      num_layers=1, bias=True,
-                                      batch_first=self.batch_first, dropout=0,
-                                      bidirectional=self.bidirectional)
+            self.last_layer = nn.Sequential(
+                nn.Dropout(p=self.dropout),
+                nn.LSTM(input_size=self.hidden_dim * 2 if self.bidirectional else self.hidden_dim,
+                        hidden_size=self.output_dim,
+                        num_layers=1, bias=True,
+                        batch_first=self.batch_first, dropout=0.,
+                        bidirectional=self.bidirectional)
+            )
         else:
             self.last_layer = []
 
@@ -101,11 +103,11 @@ class ASLModelGRU(ASLModel):
                          n_lin_layers, lin_dropout, batch_norm)
 
     def _build_network(self):
-        self.gru = nn.GRU(input_size=self.input_dim,
-                          hidden_size=self.hidden_dim if (self.num_layers > 1 or self.n_lin_layers > 0) else self.output_dim,
-                          num_layers=self.num_layers-1 if (self.n_lin_layers == 0 and self.num_layers > 1) else self.num_layers,
-                          bias=True, batch_first=self.batch_first,
-                          dropout=self.dropout, bidirectional=self.bidirectional)
+        self.lstm = nn.GRU(input_size=self.input_dim,
+                            hidden_size=self.hidden_dim if (self.num_layers > 1 or self.n_lin_layers > 0) else self.output_dim,
+                            num_layers=self.num_layers-1 if (self.n_lin_layers == 0 and self.num_layers > 1) else self.num_layers,
+                            bias=True, batch_first=self.batch_first,
+                            dropout=self.dropout if self.num_layers > 2 else 0., bidirectional=self.bidirectional)
 
         i = -1
         linear_layers = []
@@ -123,11 +125,14 @@ class ASLModelGRU(ASLModel):
                           self.output_dim)
             )
         elif self.n_lin_layers == 0 and self.num_layers > 1:
-            self.last_layer = nn.GRU(input_size=self.hidden_dim*2 if self.bidirectional else self.hidden_dim,
-                                     hidden_size=self.output_dim,
-                                     num_layers=1, bias=True,
-                                     batch_first=self.batch_first, dropout=0,
-                                     bidirectional=self.bidirectional)
+            self.last_layer = nn.Sequential(
+                nn.Dropout(p=self.dropout),
+                nn.GRU(input_size=self.hidden_dim * 2 if self.bidirectional else self.hidden_dim,
+                        hidden_size=self.output_dim,
+                        num_layers=1, bias=True,
+                        batch_first=self.batch_first, dropout=0.,
+                        bidirectional=self.bidirectional)
+            )
         else:
             self.last_layer = []
 

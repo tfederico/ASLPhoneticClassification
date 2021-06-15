@@ -10,14 +10,12 @@ df["model"] = df["model"].astype('category').cat.codes
 df["optimizer"] = df["optimizer"].astype('category').cat.codes
 df["weighted_loss"] = df["weighted_loss"].astype('category').cat.codes
 df["batch_norm"] = df["batch_norm"].astype('category').cat.codes
-df = df.drop(["epochs", "final_lr", "std_train_loss", "std_train_f1_score", "std_val_loss", "std_val_f1_score", "batch_size"], axis=1)
+df = df.drop(["epochs", "final_lr", "std_train_loss", "std_train_f1_score", "std_val_loss", "std_val_f1_score"], axis=1)
 df = df.drop(["mean_train_loss", "mean_train_f1_score"], axis=1)
+df = df.drop(["lr", "batch_norm", "seed", "model", "bidirectional", "dropout", "gamma", "interpolated", "momentum", "n_layers", "optimizer", "step_size"], axis=1)
 
-# fig = px.parallel_coordinates(df, color="mean_val_f1_score", dimensions=["hidden_dim",  "n_lin_layers"], color_continuous_scale=px.colors.diverging.Tealrose)
+# fig = px.parallel_coordinates(df, color="mean_val_f1_score", dimensions=["n_lin_layers", "lin_dropout", "batch_size", "hidden_dim",  "weighted_loss"], color_continuous_scale=px.colors.diverging.Tealrose)
 # fig.show()
-
-df = df[df["model"] == 0]
-df = df.drop(["model", "bidirectional", "dropout", "lin_dropout", "gamma", "interpolated", "momentum", "n_layers", "optimizer", "step_size"], axis=1)
 
 corr = df.corr()
 

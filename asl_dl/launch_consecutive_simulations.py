@@ -89,12 +89,12 @@ param_grid_mlp = dict(
     model=["mlp"],
     n_layers=[0],
     n_lin_layers=[2, 3, 4],
-    hidden_dim=[64, 128],
+    hidden_dim=[64, 256, 1024],
     dropout=[0.0],
     lin_dropout=[0.0, 0.25, 0.5],
     bidirectional=[False],
-    epochs=[200],
-    batch_size=[16, 32, 64, 128],
+    epochs=[100],
+    batch_size=[8, 64, 128],
     weighted_loss=[False, True],
     optimizer=["adam"],
     lr=[1e-4],
@@ -102,21 +102,21 @@ param_grid_mlp = dict(
     momentum=[0.0],
     step_size=[200],
     gamma=[0.1],
-    interpolated=[True, False],
-    batch_norm=[True, False],
+    interpolated=[True],
+    batch_norm=[True],
     seed=[13]
 )
 
 param_grid_lstm = dict(
     model=["lstm", "gru"],
-    n_layers=[1, 2, 3],
+    n_layers=[1, 2],
     n_lin_layers=[0, 1, 2],
-    hidden_dim=[64, 128, 256],
-    dropout=[0.0, 0.2, 0.4, 0.6, 0.8],
-    lin_dropout=[0.0, 0.2, 0.4, 0.6, 0.8],
+    hidden_dim=[64, 256, 1024],
+    dropout=[0.0, 0.25, 0.5],
+    lin_dropout=[0.0, 0.25, 0.5],
     bidirectional=[False, True],
-    epochs=[100, 200],
-    batch_size=[16, 32, 64, 128, 256],
+    epochs=[200],
+    batch_size=[8, 64, 128],
     weighted_loss=[False],
     optimizer=["adam"],
     lr=[1e-4],
@@ -124,7 +124,7 @@ param_grid_lstm = dict(
     momentum=[0.0],
     step_size=[200],
     gamma=[0.1],
-    interpolated=[True, False],
+    interpolated=[False],
     batch_norm=[True],
     seed=[13]
 )
@@ -132,7 +132,14 @@ param_grid_lstm = dict(
 mlp_grid = list(ParameterGrid(param_grid_mlp))
 lstm_grid = list(ParameterGrid(param_grid_lstm))
 
+# remove if n_layers <= 1 and dropout != 0.
+lstm_grid = [elem for elem in lstm_grid if elem["n_layers"] > 1 or elem["dropout"] == 0.]
+# remove if n_lin_layers <= 1 and dropout != 0.
+lstm_grid = [elem for elem in lstm_grid if elem["n_lin_layers"] > 1 or elem["lin_dropout"] == 0.]
+
 grid = mlp_grid #+ lstm_grid
+
+
 
 cmd = ""
 
