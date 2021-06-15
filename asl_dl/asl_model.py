@@ -103,7 +103,7 @@ class ASLModelGRU(ASLModel):
                          n_lin_layers, lin_dropout, batch_norm)
 
     def _build_network(self):
-        self.lstm = nn.GRU(input_size=self.input_dim,
+        self.gru = nn.GRU(input_size=self.input_dim,
                             hidden_size=self.hidden_dim if (self.num_layers > 1 or self.n_lin_layers > 0) else self.output_dim,
                             num_layers=self.num_layers-1 if (self.n_lin_layers == 0 and self.num_layers > 1) else self.num_layers,
                             bias=True, batch_first=self.batch_first,
