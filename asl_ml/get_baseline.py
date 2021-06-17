@@ -6,7 +6,7 @@ from sklearn.model_selection import train_test_split
 from asl_ml.preprocessing import preprocess_dataset
 from sklearn.dummy import DummyClassifier
 
-metrics = ["micro"]
+metrics = ["micro", "macro"]
 test_size = 0.15
 
 different_length = True

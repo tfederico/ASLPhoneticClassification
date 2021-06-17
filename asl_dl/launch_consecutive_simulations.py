@@ -93,7 +93,7 @@ param_grid_mlp = dict(
     dropout=[0.0],
     lin_dropout=[0.0, 0.25, 0.5],
     bidirectional=[False],
-    epochs=[100],
+    epochs=[50],
     batch_size=[8, 64, 128],
     weighted_loss=[False, True],
     optimizer=["adam"],
@@ -115,9 +115,9 @@ param_grid_lstm = dict(
     dropout=[0.0, 0.25, 0.5],
     lin_dropout=[0.0, 0.25, 0.5],
     bidirectional=[False, True],
-    epochs=[200],
+    epochs=[50],
     batch_size=[8, 64, 128],
-    weighted_loss=[False],
+    weighted_loss=[True, False],
     optimizer=["adam"],
     lr=[1e-4],
     final_lr=[1e-4],
@@ -137,7 +137,7 @@ lstm_grid = [elem for elem in lstm_grid if elem["n_layers"] > 1 or elem["dropout
 # remove if n_lin_layers <= 1 and dropout != 0.
 lstm_grid = [elem for elem in lstm_grid if elem["n_lin_layers"] > 1 or elem["lin_dropout"] == 0.]
 
-grid = mlp_grid #+ lstm_grid
+grid = lstm_grid + mlp_grid
 
 
 

@@ -32,7 +32,7 @@ def print_labels_statistics(y):
 random_seed = 87342
 different_length = True
 
-metrics = ["f1_micro"]
+metrics = ["f1_micro", "f1_macro", "f1_weighted"]
 test_size = 0.15
 
 drop_features_lr = ["Heel", "Knee", "Hip", "Toe", "Pinkie", "Ankle"]

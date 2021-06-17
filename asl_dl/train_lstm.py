@@ -117,15 +117,12 @@ def train_n_epochs(args, train_dataset, val_dataset, weights, input_dim, output_
         model.train()
         if np.mean(val_losses) < valid_loss_min:
             valid_loss_min = np.mean(val_losses)
-            if tag == "":
-                torch.save(model.state_dict(), '{}/state_dict_min_loss.pt'.format(log_dir))
         if val_f1_score > valid_f1_max:
             valid_f1_max = val_f1_score
-            if tag == "":
-                torch.save(model.state_dict(), '{}/state_dict_max_f1score.pt'.format(log_dir))
         train_loss_min = min(train_loss_min, np.mean(train_losses))
         train_f1_max = max(train_f1_max, train_f1_score)
-    torch.save(model.state_dict(), '{}/state_dict_final.pt'.format(log_dir))
+    if tag == "":
+        torch.save(model.state_dict(), '{}/state_dict_final.pt'.format(log_dir))
     return train_loss_min, train_f1_max, valid_loss_min, valid_f1_max
 
 
