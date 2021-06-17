@@ -81,3 +81,5 @@ for label in labels:
             with open("valid_results/{}/{}_{}.json".format(name, label, metric), "w") as fp:
                 json.dump(best_params[name], fp)
 
+        del best_clfs, best_params, tr_scores, val_scores, best_indeces
+
