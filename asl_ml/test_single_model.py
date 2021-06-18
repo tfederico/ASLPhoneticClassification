@@ -5,6 +5,7 @@ from asl_ml.preprocessing import preprocess_dataset
 from sklearn.linear_model import LogisticRegression
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.svm import SVC
+from tqdm import tqdm
 
 test_size = 0.15
 
@@ -15,10 +16,10 @@ random_seeds = [1483533434, 3708593420, 1435909850, 1717893437, 2058363314, 3759
 print("Number of different seeds:", len(random_seeds))
 
 clf = RandomForestClassifier
-params = {"clf__class_weight": "balanced_subsample", "clf__criterion": "entropy", "clf__max_depth": 5.5, "clf__max_features": 1.0, "clf__n_estimators": 101}
+params = {"clf__class_weight": "balanced_subsample", "clf__criterion": "entropy", "clf__max_features": 0.5}
 params = {k.replace("clf__", ""): v for k, v in params.items()}
 metrics = ["micro"]
-labels = ["SignType"]
+labels = ["Movement"]
 
 average_results = {}
 for label in labels:
@@ -30,7 +31,7 @@ for label in labels:
     metric_results = {}
     for metric in metrics:
         results = []
-        for random_seed in random_seeds:
+        for random_seed in tqdm(random_seeds):
             model = clf(random_state=random_seed)
             model.set_params(**params)
             X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=test_size, random_state=random_seed, shuffle=True, stratify=y)

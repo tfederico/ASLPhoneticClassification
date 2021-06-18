@@ -161,7 +161,7 @@ def main():
     else:
         folder_name = "csvs"
     dataset = ASLDataset(folder_name, "reduced_SignData.csv",
-                         sel_labels=["MajorLocation"], drop_features=["Heel", "Knee", "Hip", "Toe", "Pinkie", "Ankle"],
+                         sel_labels=["SignType"], drop_features=["Heel", "Knee", "Hip", "Toe", "Pinkie", "Ankle"],
                          different_length=not args.interpolated)
     # print_stats(dataset)
     X, y = dataset[:][0], dataset[:][1]
