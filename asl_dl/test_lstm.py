@@ -42,23 +42,22 @@ def test(args, X_test, y_test, weights, input_dim, output_dim, log_dir):
 
 def main():
 
-    use_loss = True # true for loss, false for f1 score
 
-    df = pd.read_csv("runs/summary.csv", header=0, index_col=None)
+    feature = "SignType"
+    use_loss = True # true for loss, false for f1 score
+    df = pd.read_csv("{}/gru_runs/summary.csv".format(feature), header=0, index_col=None)
     df.sort_values('mean_val_loss' if use_loss else "mean_val_f1_score", inplace=True, ascending=use_loss)
     args = df.iloc[0].to_dict()
     args = {k: getattr(v, "tolist", lambda: v)() for k, v in args.items()}
     args = DotMap(args)
     args.device = "cuda" if torch.cuda.is_available() else "cpu"
-
     if args.interpolated:
         folder_name = "interpolated_csvs"
     else:
         folder_name = "csvs"
-
     log_dir = "test_results"
     dataset = ASLDataset(folder_name, "reduced_SignData.csv",
-                         sel_labels=["MajorLocation"], drop_features=["Heel", "Knee", "Hip", "Toe", "Pinkie", "Ankle"],
+                         sel_labels=[feature], drop_features=["Heel", "Knee", "Hip", "Toe", "Pinkie", "Ankle"],
                          different_length=not args.interpolated)
 
     X, y = dataset[:][0], dataset[:][1]

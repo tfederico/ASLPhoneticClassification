@@ -1,6 +1,6 @@
-asl_dl/lstm_runs
-asl_dl/mlp_runs
-asl_dl/runs
+asl_dl/MajorLocation/
+asl_dl/Movement/
+asl_dl/SignType/
 asl_dl/test_results
 asl_ml/valid_results
 asl_data/reduced_SignData.csv

@@ -6,7 +6,9 @@ import numpy as np
 from tqdm import tqdm
 import shutil
 
-runs = [f.path for f in os.scandir("runs/") if f.is_dir()]
+folder = "Movement/mlp_runs/"
+
+runs = [f.path for f in os.scandir(folder) if f.is_dir()]
 runs = sorted(runs)
 
 df = pd.DataFrame(columns=sorted(['seed', 'model', 'n_layers', 'n_lin_layers', 'hidden_dim', 'dropout', 'lin_dropout',
@@ -46,5 +48,5 @@ print(df.iloc[0])
 df.sort_values('mean_val_f1_score', ascending=False, inplace=True)
 print("Best F1-score")
 print(df.iloc[0])
-df.to_csv("runs/summary.csv", index=False)
+df.to_csv("{}summary.csv".format(folder), index=False)
 print(df.iloc[0].compare(bl))

@@ -89,7 +89,7 @@ def run_once(args, model, loader, criterion, optimizer, is_train=False):
 
 def train_n_epochs(args, train_dataset, val_dataset, weights, input_dim, output_dim, writer, log_dir, tag):
     train_loader = DataLoader(train_dataset, shuffle=True, batch_size=args.batch_size,
-                              num_workers=4, drop_last=False, worker_init_fn=seed_worker)
+                              num_workers=6, drop_last=False, worker_init_fn=seed_worker)
     val_loader = DataLoader(val_dataset, shuffle=False, batch_size=args.batch_size,
                             num_workers=2, drop_last=False, worker_init_fn=seed_worker)
 

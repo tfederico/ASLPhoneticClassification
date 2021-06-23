@@ -65,3 +65,10 @@ for label in labels:
                         plt.legend(loc="best")
                         plt.savefig("valid_results/{}/{}_{}_{}.pdf".format(model, label, metric, param_name))
                         plt.close()
+
+                        j = dict(param_range=param_range, train_scores_mean=train_scores_mean,
+                                 train_scores_std=train_scores_std, valid_scores_mean=valid_scores_mean,
+                                 valid_scores_std=valid_scores_std)
+                        
+                        with open("valid_results/{}/{}_{}_{}.pdf".format(model, label, metric, param_name), "w") as js:
+                            json.dump(j, js)
