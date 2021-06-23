@@ -32,7 +32,7 @@ for label in labels:
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=test_size, random_state=random_seed, shuffle=True, stratify=y)
     for metric in metrics:
         for model, clf in models_dict.items():
-            with open("valid_results/{}/{}_{}.json".format(model, label, metric), "r") as fp:
+            with open("valid_results/{}/{}/{}_{}.json".format(model, metric.replace("f1_", ""), label, metric), "r") as fp:
                 best_params = {k.replace("clf__", ""): v for k, v in json.load(fp).items()}
                 clf.set_params(**best_params)
                 for param_name, param_range in params_dict[model].items():
@@ -66,9 +66,11 @@ for label in labels:
                         plt.savefig("valid_results/{}/{}_{}_{}.pdf".format(model, label, metric, param_name))
                         plt.close()
 
-                        j = dict(param_range=param_range, train_scores_mean=train_scores_mean,
-                                 train_scores_std=train_scores_std, valid_scores_mean=valid_scores_mean,
-                                 valid_scores_std=valid_scores_std)
+                        j = dict(param_range=param_range if type(param_range) == list else param_range.tolist(),
+                                 train_scores_mean=train_scores_mean.tolist(),
+                                 train_scores_std=train_scores_std.tolist(),
+                                 valid_scores_mean=valid_scores_mean.tolist(),
+                                 valid_scores_std=valid_scores_std.tolist())
                         
-                        with open("valid_results/{}/{}_{}_{}.pdf".format(model, label, metric, param_name), "w") as js:
+                        with open("valid_results/{}/{}_{}_{}.json".format(model, label, metric, param_name), "w") as js:
                             json.dump(j, js)
