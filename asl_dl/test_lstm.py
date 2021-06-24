@@ -15,7 +15,7 @@ from tqdm import tqdm
 
 def train_n_epochs(args, train_dataset, weights, input_dim, output_dim, log_dir):
     train_loader = DataLoader(train_dataset, shuffle=True, batch_size=args.batch_size,
-                              num_workers=-1, drop_last=False, worker_init_fn=seed_worker)
+                              num_workers=0, drop_last=False, worker_init_fn=seed_worker)
 
     criterion = get_loss(weights)
     model = get_model(args, input_dim, output_dim).to(args.device)
@@ -49,7 +49,7 @@ def retrain(args, X, y, weights, input_dim, output_dim, writer, log_dir,):
 def test(args, X_test, y_test, weights, input_dim, output_dim, log_dir):
     test_dataset = torch.utils.data.TensorDataset(torch.from_numpy(X_test), torch.from_numpy(y_test))
     test_loader = DataLoader(test_dataset, shuffle=False, batch_size=args.batch_size,
-                             num_workers=-1, drop_last=False, worker_init_fn=seed_worker)
+                             num_workers=0, drop_last=False, worker_init_fn=seed_worker)
     criterion = get_loss(weights)
     model = get_model(args, input_dim, output_dim).to(args.device)
     model.load_state_dict(torch.load('{}/state_dict_final.pt'.format(log_dir)))
@@ -65,7 +65,7 @@ def main():
     labels = ["Movement", "SignType", "MajorLocation"]
     models = ["mlp", "gru", "lstm"]
 
-    best_dict_movement = dict(mlp="Jun19_12-05-25_824c78007764", gru="Jun18_19-13-14_40b831a77e47", lstm="Jun19_21-51-37_d23428c5e3ac")
+    best_dict_movement = dict(mlp="Jun19_12-05-25_824c78007764", gru="Jun19_14-04-11_d11bbfeea33f", lstm="Jun19_21-51-37_d23428c5e3ac")
     best_dict_sign_type = dict(mlp="Jun18_11-10-34_d33faca24ba3", gru="Jun19_00-20-17_d6924f8950bf", lstm="Jun18_13-10-56_7d03cdf3b46f")
     best_dict_major_loc = dict(mlp="Jun14_10-46-21_c4326084d471", gru="Jun16_08-54-52_6dfcb86d951b", lstm="Jun14_13-18-46_eff1ca3fcc55")
 
@@ -121,7 +121,6 @@ def main():
 
                 out_log["f1_score_test"] = f1_score(test_gt, test_outs, average="micro")
                 out_log["macro_f1_score_test"] = f1_score(test_gt, test_outs, average="macro")
-                print("Test score for current seed:", out_log["f1_score_test"])
                 out_log["confusion_matrix"] = confusion_matrix(test_gt, test_outs).tolist()
                 out_log["normalized_cf_matrix"] = confusion_matrix(test_gt, test_outs, normalize="true").tolist()
                 logs[seed] = out_log
@@ -135,6 +134,7 @@ def main():
                 micro_tests.append(v["f1_score_test"])
                 macro_tests.append(v["macro_f1_score_test"])
 
+            print(feature, model)
             print(np.mean(micro_tests), np.std(micro_tests))
             print(np.mean(macro_tests), np.std(macro_tests))
 
