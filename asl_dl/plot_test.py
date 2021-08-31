@@ -1,3 +1,5 @@
+import matplotlib
+matplotlib.rcParams.update({'font.size': 12.5})
 import matplotlib.pyplot as plt
 import json
 import numpy as np
@@ -20,7 +22,7 @@ for model in models:
     fig = plt.figure()
     plt.xlabel("Epochs")
     plt.ylabel("Loss")
-    plt.ylim(0.5, 2.2)
+    plt.ylim(0, 2)
     lw = 2
     for label in labels:
         train_losses = []
@@ -38,14 +40,14 @@ for model in models:
         param_range = range(len(train_scores_mean))
         plt.plot(param_range, train_scores_mean, label="{} (train)".format(label),
                      color=colors_dict[label]["train"], lw=lw)
-        # plt.fill_between(param_range, train_scores_mean - train_scores_std,
-        #                  train_scores_mean + train_scores_std, alpha=0.2,
-        #                  color=colors_dict[label]["train"], lw=lw)
+        plt.fill_between(param_range, train_scores_mean - train_scores_std,
+                         train_scores_mean + train_scores_std, alpha=0.2,
+                         color=colors_dict[label]["train"], lw=lw)
         plt.plot(param_range, valid_scores_mean, label="{} (val)".format(label),
                      color=colors_dict[label]["valid"], lw=lw)
-        # plt.fill_between(param_range, valid_scores_mean - valid_scores_std,
-        #                  valid_scores_mean + valid_scores_std, alpha=0.2,
-        #                  color=colors_dict[label]["valid"], lw=lw)
+        plt.fill_between(param_range, valid_scores_mean - valid_scores_std,
+                         valid_scores_mean + valid_scores_std, alpha=0.2,
+                         color=colors_dict[label]["valid"], lw=lw)
     plt.legend(loc="best", ncol=2)
     plt.tight_layout()
     plt.savefig("test_results/crammed_{}.pdf".format(model))
