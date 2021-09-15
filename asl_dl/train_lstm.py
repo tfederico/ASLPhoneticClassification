@@ -50,7 +50,6 @@ def get_loss(weights):
 
 def get_model(args, input_dim, output_dim):
     if args.model == "mlp":
-        assert args.interpolated, "Input must have fixed length"
         return ASLModelMLP(input_dim, args.hidden_dim, output_dim, n_lin_layers=args.n_lin_layers,
                            lin_dropout=args.lin_dropout, batch_norm=args.batch_norm)
     elif args.model == "lstm":
