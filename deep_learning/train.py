@@ -2,7 +2,7 @@ import torch
 import random
 import numpy as np
 from tqdm import tqdm
-from deep_learning.models import ASLLSTMModel, ASLModelGRU, ASLModelMLP
+from deep_learning.models import ASLModelLSTM, ASLModelGRU, ASLModelMLP
 from data.dataset import ASLDataset
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import f1_score
@@ -53,7 +53,7 @@ def get_model(args, input_dim, output_dim):
         return ASLModelMLP(input_dim, args.hidden_dim, output_dim, n_lin_layers=args.n_lin_layers,
                            lin_dropout=args.lin_dropout, batch_norm=args.batch_norm)
     elif args.model == "lstm":
-        model = ASLLSTMModel
+        model = ASLModelLSTM
     elif args.model == "gru":
         model = ASLModelGRU
     else:

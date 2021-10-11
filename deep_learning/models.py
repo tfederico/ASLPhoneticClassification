@@ -45,7 +45,7 @@ class ASLModelMLP(ASLModel):
         return self.linear_layers(x)
 
 
-class ASLLSTMModel(ASLModel):
+class ASLModelLSTM(ASLModel):
     def __init__(self, input_dim, hidden_dim, num_layers, output_dim, batch_first=True,
                  dropout=0, bidirectional=False, n_lin_layers=0, lin_dropout=0, batch_norm=False):
         super().__init__()
@@ -109,7 +109,7 @@ class ASLLSTMModel(ASLModel):
         return final_out
 
 
-class ASLModelGRU(ASLLSTMModel):
+class ASLModelGRU(ASLModelLSTM):
     def __init__(self, input_dim, hidden_dim, num_layers, output_dim, batch_first=True,
                  dropout=0, bidirectional=False, n_lin_layers=0, lin_dropout=0, batch_norm=False):
         super().__init__(input_dim, hidden_dim, num_layers, output_dim, batch_first, dropout, bidirectional,
