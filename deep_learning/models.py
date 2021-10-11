@@ -1,7 +1,18 @@
-import torch
 from torch import nn
 
-class ASLModelMLP(nn.Module):
+
+class ASLModel(nn.Module):
+    def __init__(self):
+        super().__init__()
+
+    def _build_network(self):
+        pass
+
+    def forward(self, x):
+        pass
+
+
+class ASLModelMLP(ASLModel):
     def __init__(self, input_dim, hidden_dim, output_dim, n_lin_layers=2, lin_dropout=0, batch_norm=False):
         assert n_lin_layers > 1, "MLP needs at least 2 layers (hidden + output)"
         super().__init__()
@@ -11,10 +22,12 @@ class ASLModelMLP(nn.Module):
         self.n_lin_layers = n_lin_layers
         self.lin_dropout = lin_dropout
         self.batch_norm = batch_norm
+        self._build_network()
 
+    def _build_network(self):
         linear_layers = []
         linear_layers.append(nn.Flatten())
-        linear_layers.append(nn.Linear(input_dim, self.hidden_dim))
+        linear_layers.append(nn.Linear(self.input_dim, self.hidden_dim))
 
         for i in range(1, self.n_lin_layers):
             linear_layers.append(nn.ReLU())
@@ -32,7 +45,7 @@ class ASLModelMLP(nn.Module):
         return self.linear_layers(x)
 
 
-class ASLModel(nn.Module):
+class ASLLSTMModel(ASLModel):
     def __init__(self, input_dim, hidden_dim, num_layers, output_dim, batch_first=True,
                  dropout=0, bidirectional=False, n_lin_layers=0, lin_dropout=0, batch_norm=False):
         super().__init__()
@@ -96,7 +109,7 @@ class ASLModel(nn.Module):
         return final_out
 
 
-class ASLModelGRU(ASLModel):
+class ASLModelGRU(ASLLSTMModel):
     def __init__(self, input_dim, hidden_dim, num_layers, output_dim, batch_first=True,
                  dropout=0, bidirectional=False, n_lin_layers=0, lin_dropout=0, batch_norm=False):
         super().__init__(input_dim, hidden_dim, num_layers, output_dim, batch_first, dropout, bidirectional,
