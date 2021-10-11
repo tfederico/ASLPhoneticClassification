@@ -1,11 +1,11 @@
 from sklearn.model_selection import validation_curve
 from sklearn.model_selection import train_test_split
-from asl_ml.preprocessing import preprocess_dataset
+from machine_learning.preprocessing import preprocess_dataset
 from sklearn.linear_model import LogisticRegression
 from sklearn.svm import SVC
 import matplotlib.pyplot as plt
 import numpy as np
-from asl_ml.model_selection import get_classifiers, get_classifiers_names, get_numerical_parameters
+from machine_learning.model_selection import get_classifiers, get_classifiers_names, get_numerical_parameters
 from sklearn.model_selection import StratifiedKFold
 
 random_seed = 87342

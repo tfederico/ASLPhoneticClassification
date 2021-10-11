@@ -2,8 +2,8 @@ import torch
 import random
 import numpy as np
 from tqdm import tqdm
-from asl_dl.asl_model import ASLModel, ASLModelGRU, ASLModelMLP
-from asl_data.asl_dataset import ASLDataset
+from deep_learning.models import ASLModel, ASLModelGRU, ASLModelMLP
+from data.dataset import ASLDataset
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import f1_score
 from torch.nn import CrossEntropyLoss
@@ -11,7 +11,7 @@ from torch.utils.tensorboard import SummaryWriter
 from torch.utils.data import DataLoader
 from sklearn.model_selection import StratifiedKFold
 import adabound
-from asl_dl.parser import get_parser
+from deep_learning.parser import get_parser
 import json
 
 

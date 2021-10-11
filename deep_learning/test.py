@@ -2,14 +2,14 @@ import torch
 import random
 import numpy as np
 import pandas as pd
-from asl_data.asl_dataset import ASLDataset
+from data.dataset import ASLDataset
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import f1_score
 from sklearn.metrics import confusion_matrix
 from torch.utils.tensorboard import SummaryWriter
 from torch.utils.data import DataLoader
 import json
-from asl_dl.train_lstm import get_loss, get_model, run_once, seed_worker, get_lr_optimizer, get_lr_scheduler
+from deep_learning.train import get_loss, get_model, run_once, seed_worker, get_lr_optimizer, get_lr_scheduler
 from dotmap import DotMap
 from tqdm import tqdm
 

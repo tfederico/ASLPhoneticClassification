@@ -1,5 +1,5 @@
 import numpy as np
-from asl_data.asl_dataset import ASLDataset
+from data.dataset import ASLDataset
 
 ## Possible labels
 # Compound, Initialized, FingerspelledLoanSign, SignType, MajorLocation,

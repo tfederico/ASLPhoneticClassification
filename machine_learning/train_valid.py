@@ -7,8 +7,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 from sklearn.metrics import confusion_matrix
 from sklearn.model_selection import train_test_split
-from asl_ml.preprocessing import preprocess_dataset
-from asl_ml.model_selection import select_best_models
+from machine_learning.preprocessing import preprocess_dataset
+from machine_learning.model_selection import select_best_models
 import seaborn as sns
 import os
 

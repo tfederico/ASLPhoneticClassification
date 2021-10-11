@@ -3,7 +3,7 @@ import random
 import numpy as np
 from sklearn.metrics import f1_score
 from sklearn.model_selection import train_test_split
-from asl_ml.preprocessing import preprocess_dataset
+from machine_learning.preprocessing import preprocess_dataset
 from sklearn.dummy import DummyClassifier
 
 metrics = ["micro", "macro", "weighted"]

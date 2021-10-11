@@ -13,18 +13,23 @@ colors = [
     dict(train="darkred", valid="lightcoral")
 ]
 
+line_styles = ['-', '--', ':']
+markers = ["o", "x", "v"]
+
 models = ["mlp", "lstm", "gru"]
-labels = ["Movement", "MajorLocation", "SignType"]
+labels = ["MajorLocation", "SignType"]
 
 colors_dict = dict(zip(labels, colors))
+line_styles_dict = dict(zip(models, line_styles))
+markers_dict = dict(zip(models, markers))
 
-for model in models:
+for label in labels:
     fig = plt.figure()
     plt.xlabel("Epochs")
     plt.ylabel("Loss")
     plt.ylim(0, 2)
     lw = 2
-    for label in labels:
+    for model in models:
         train_losses = []
         valid_losses = []
         for seed in seeds:
@@ -39,16 +44,16 @@ for model in models:
 
         param_range = range(len(train_scores_mean))
         plt.plot(param_range, train_scores_mean, label="{} (train)".format(label),
-                     color=colors_dict[label]["train"], lw=lw)
+                     color=colors_dict[label]["train"], lw=lw, linestyle=line_styles_dict[model], marker=markers_dict[model])
         plt.fill_between(param_range, train_scores_mean - train_scores_std,
                          train_scores_mean + train_scores_std, alpha=0.2,
-                         color=colors_dict[label]["train"], lw=lw)
+                         color=colors_dict[label]["train"], lw=lw, linestyle=line_styles_dict[model], marker=markers_dict[model])
         plt.plot(param_range, valid_scores_mean, label="{} (val)".format(label),
                      color=colors_dict[label]["valid"], lw=lw)
         plt.fill_between(param_range, valid_scores_mean - valid_scores_std,
                          valid_scores_mean + valid_scores_std, alpha=0.2,
-                         color=colors_dict[label]["valid"], lw=lw)
+                         color=colors_dict[label]["valid"], lw=lw, linestyle=line_styles_dict[model], marker=markers_dict[model])
     plt.legend(loc="best", ncol=2)
     plt.tight_layout()
-    plt.savefig("test_results/crammed_{}.pdf".format(model))
+    plt.savefig("test_results/crammed_{}.pdf".format(label))
     plt.close()
