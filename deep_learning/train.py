@@ -3,7 +3,7 @@ import random
 import numpy as np
 from tqdm import tqdm
 from deep_learning.models import ASLModelLSTM, ASLModelGRU, ASLModelMLP
-from data.dataset import ASLDataset
+from data.dataset import ASLDataset, CompleteASLDataset
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import f1_score
 from torch.nn import CrossEntropyLoss
@@ -159,7 +159,7 @@ def main():
         folder_name = "interpolated_csvs"
     else:
         folder_name = "csvs"
-    dataset = ASLDataset(folder_name, "reduced_SignData.csv",
+    dataset = CompleteASLDataset(folder_name, "reduced_SignData.csv",
                          sel_labels=["SignType"], drop_features=["Heel", "Knee", "Hip", "Toe", "Pinkie", "Ankle"],
                          different_length=not args.interpolated)
     # print_stats(dataset)
@@ -180,10 +180,10 @@ def main():
     out_log = {}
     out_log["args"] = args.__dict__
 
-    min_train_loss_per_fold, max_train_f1_score_per_fold, min_val_loss_per_fold, max_val_f1_score_per_fold = perform_validation(args, X_train, y_train,
-                                                                                                                                weights, input_dim,
+    min_train_loss_per_fold, max_train_f1_score_per_fold, min_val_loss_per_fold, max_val_f1_score_per_fold = perform_validation(args, X_train, y_train,                                                                                                      weights, input_dim,
                                                                                                                                 output_dim, writer,
                                                                                                                                 log_dir)
+
     out_log["min_train_loss_per_fold"] = min_train_loss_per_fold
     out_log["max_train_f1_score_per_fold"] = max_train_f1_score_per_fold
     out_log["min_val_loss_per_fold"] = min_val_loss_per_fold

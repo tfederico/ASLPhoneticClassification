@@ -12,6 +12,7 @@ from machine_learning.model_selection import select_best_models
 import seaborn as sns
 import os
 
+
 def print_labels_statistics(y):
     diff_y, counts = np.unique(y, return_counts=True)
     print(list(zip(diff_y, counts)))
@@ -32,13 +33,13 @@ def print_labels_statistics(y):
 random_seed = 87342
 different_length = True
 
-metrics = ["f1_micro", "f1_macro", "f1_weighted"]
+metrics = ["f1_micro", "f1_macro"]
 test_size = 0.15
 
 drop_features_lr = ["Heel", "Knee", "Hip", "Toe", "Pinkie", "Ankle"]
 drop_features_center = ["Hip.Center"]
 
-labels = ["Movement", "MajorLocation", "SignType"]
+labels = ["MajorLocation", "SignType"]
 
 
 if not os.path.exists("valid_results"):

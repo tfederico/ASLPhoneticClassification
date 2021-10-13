@@ -1,5 +1,5 @@
 import numpy as np
-from data.dataset import ASLDataset
+from data.dataset import ASLDataset, CompleteASLDataset
 
 ## Possible labels
 # Compound, Initialized, FingerspelledLoanSign, SignType, MajorLocation,
@@ -83,7 +83,7 @@ def preprocess_dataset(labels, drop_feat_lr, drop_feat_center, different_length 
     drop_features = [f+s for f in drop_features for s in [".L", ".R"]]
     drop_features += drop_feat_center
     drop_features = [f+a for f in drop_features for a in ["_x", "_y", "_z"]]
-    dataset = ASLDataset("interpolated_csvs" if not different_length else "csvs",
+    dataset = CompleteASLDataset("interpolated_csvs" if not different_length else "csvs",
                             "reduced_SignData.csv", sel_labels=labels, drop_features=drop_features, different_length=different_length)
     X = dataset[:][0] # shape (n_clip, n_frames, n_joints)
     y = dataset[:][1] # shape (n_clip, n_labels)

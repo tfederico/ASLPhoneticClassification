@@ -5,10 +5,14 @@ deep_learning/test_results
 machine_learning/valid_results
 data/reduced_SignData.csv
 data/csvs
+data/small_csvs
+data/*.pkl
 data/interpolated_csvs
 *.pdf
 *.json
+deep_learning/launch_consecutive_simulations.py
 deep_learning/commands.txt
 ASL_phonetic_classification.egg-info
 .idea
 __pycache__
+runs/

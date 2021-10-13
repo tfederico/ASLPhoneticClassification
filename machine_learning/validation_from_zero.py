@@ -16,7 +16,7 @@ test_size = 0.15
 drop_features_lr = ["Heel", "Knee", "Hip", "Toe", "Pinkie", "Ankle"]
 drop_features_center = ["Hip.Center"]
 
-labels = ["Movement", "MajorLocation", "SignType"]
+labels = ["MajorLocation", "SignType"]
 metrics = ["f1_micro"]
 
 models_dict = dict(zip(get_classifiers_names(), get_classifiers(random_seed)))
