@@ -93,8 +93,8 @@ param_grid_mlp = dict(
     dropout=[0.0],
     lin_dropout=[0.0, 0.25, 0.5],
     bidirectional=[False],
-    epochs=[100],
-    batch_size=[8, 64, 128],
+    epochs=[50],
+    batch_size=[64, 128],
     weighted_loss=[False],
     optimizer=["adam"],
     lr=[1e-3, 1e-4],
@@ -115,11 +115,11 @@ param_grid_lstm = dict(
     dropout=[0.25, 0.5],
     lin_dropout=[0.25, 0.5],
     bidirectional=[False, True],
-    epochs=[100],
-    batch_size=[128],
+    epochs=[50],
+    batch_size=[64, 128],
     weighted_loss=[False],
     optimizer=["adam"],
-    lr=[1e-4],
+    lr=[1e-3, 1e-4],
     final_lr=[1e-4],
     momentum=[0.0],
     step_size=[200],
@@ -137,14 +137,14 @@ lstm_grid = [elem for elem in lstm_grid if elem["n_layers"] > 1 or elem["dropout
 # remove if n_lin_layers <= 1 and dropout != 0.
 lstm_grid = [elem for elem in lstm_grid if elem["n_lin_layers"] > 1 or elem["lin_dropout"] == 0.]
 
-grid = mlp_grid #+ lstm_grid
+grid = mlp_grid + lstm_grid
 
 
 
 cmd = ""
 
 for elem in tqdm(grid):
-    cmd += "python -m asl_dl.train_lstm"
+    cmd += "python -m deep_learning.train"
     for k, v in elem.items():
         cmd += " --{} {}".format(k, v)
 
