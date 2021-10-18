@@ -13,7 +13,7 @@ def str2bool(v):
 def get_parser():
     parser = argparse.ArgumentParser(description="ASL-Lex feature recognition")
     parser.add_argument('--device', default="cuda:0", type=str, help='device id')
-    parser.add_argument('--model', default="mlp", type=str, help='memory unit', choices=['lstm', 'gru', "mlp"])
+    parser.add_argument('--model', default="mlp", type=str, help='memory unit', choices=['lstm', 'gru', "mlp", "3dcnn"])
     parser.add_argument('--n_layers', default=0, type=int, help='# layers lstm')
     parser.add_argument('--n_lin_layers', default=2, type=int, help='# linear layers')
     parser.add_argument('--hidden_dim', default=64, type=int, help='# hidden units in lstm')
@@ -32,4 +32,14 @@ def get_parser():
     parser.add_argument('--interpolated', default=False, type=str2bool, choices=[True, False], help='using downsampled data')
     parser.add_argument('--batch_norm', default=True, type=str2bool, choices=[True, False], help='using batch_normalisation')
     parser.add_argument('--seed', default=13, type=int, help="random seed for simulation")
+    parser.add_argument('--out_channels', type=lambda s: [int(item) for item in s.split(',')], help="List of output channels for 3D CNN")
+    parser.add_argument('--kernel_size', default=3, type=int, help="Kernel size (must be integer for now)")
+    parser.add_argument('--pool_size', default=3, type=int, help="MaxPool size (must be integer for now)")
+    parser.add_argument('--c_stride', default=1, type=int, help="Convolution stride")
+    parser.add_argument('--c_padding', default=0, type=int, help="Convolution padding")
+    parser.add_argument('--c_dilation', default=1, type=int, help="Convolution dilation")
+    parser.add_argument('--c_groups', default=1, type=int, help="Convolution groups")
+    parser.add_argument('--p_stride', default=None, type=int, help="Pooling stride")
+    parser.add_argument('--p_padding', default=0, type=int, help="Pooling padding")
+    parser.add_argument('--p_dilation', default=1, type=int, help="Pooling dilation")
     return parser

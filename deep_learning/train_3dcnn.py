@@ -1,7 +1,8 @@
 import torch
+import torchvision
 import random
 import numpy as np
-from data.dataset import ASLDataset, CompleteASLDataset
+from data.dataset import ASLDataset, CompleteASLDataset, CompleteVideoASLDataset
 from sklearn.model_selection import train_test_split
 from torch.utils.tensorboard import SummaryWriter
 from deep_learning.parser import get_parser
@@ -30,23 +31,30 @@ def main():
     torch.manual_seed(args.seed)
     np.random.seed(args.seed)
     random.seed(args.seed)
-    if args.interpolated:
-        folder_name = "interpolated_csvs"
-    else:
-        folder_name = "csvs"
 
+    folder_name = "WLASL10"
+
+
+    transforms = torchvision.transforms.Compose(
+        [
+            torchvision.transforms.ToPILImage("RGB"),
+            torchvision.transforms.Resize((256, 256)),
+            torchvision.transforms.ToTensor()
+        ]
+    )
     sel_labels = ["MajorLocation"]
-    # dataset = CompleteASLDataset(folder_name, "reduced_SignData.csv",
-    #                      sel_labels=sel_labels, drop_features=["Heel", "Knee", "Hip", "Toe", "Pinkie", "Ankle"],
-    #                      different_length=not args.interpolated)
-    with open("data/{}_dataset.pkl".format("majloc" if ["MajorLocation"] == sel_labels else "signtype"), "rb") as fp:
-        dataset = pickle.load(fp)
+    dataset = CompleteVideoASLDataset(folder_name, "reduced_SignData.csv", sel_labels=sel_labels,
+                                      drop_features=["Heel", "Knee", "Hip", "Toe", "Pinkie", "Ankle"],
+                                      different_length=not args.interpolated, transform=transforms)
 
     # print_stats(dataset)
     X, y = dataset[:][0], dataset[:][1]
+    print(dataset[0])
+    print(len(y))
+    classes, y_indices = np.unique(y, return_inverse=True)
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.15, random_state=args.seed, shuffle=True, stratify=y)
 
-    input_dim = X[0].shape[1] if args.model != "mlp" else X[0].shape[0] * X[0].shape[1]
+    input_dim = X[0].shape[1:] #X[0].shape[1] if args.model != "mlp" else X[0].shape[0] * X[0].shape[1]
     output_dim = len(np.unique(y))
 
     if args.weighted_loss:
