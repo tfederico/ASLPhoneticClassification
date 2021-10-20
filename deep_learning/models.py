@@ -220,7 +220,7 @@ class ASLModel3DCNN(ASLModel):
         d_i = self.d_in
         h_i = self.h_in
         w_i = self.w_in
-        print("Input: ", d_i, h_i, w_i)
+        # print("Input: ", d_i, h_i, w_i)
         for i in range(self.n_cnn_layers):
             in_channels = self.in_channels if i == 0 else self.out_channels[i-1]
             cnn_layers.append(nn.Conv3d(in_channels, self.out_channels[i], self.kernel_size, self.c_stride,
@@ -228,16 +228,17 @@ class ASLModel3DCNN(ASLModel):
             d_i = self._calc_out(d_i, 0)
             h_i = self._calc_out(h_i, 1)
             w_i = self._calc_out(w_i, 2)
-            print("Conv: ", d_i, h_i, w_i)
+            # print("Conv: ", d_i, h_i, w_i)
             cnn_layers.append(nn.ReLU())
             cnn_layers.append(nn.MaxPool3d(self.pool_size, self.p_stride, self.p_padding, self.p_dilation))
             d_i = self._calc_out(d_i, 0, is_conv=False)
             h_i = self._calc_out(h_i, 1, is_conv=False)
             w_i = self._calc_out(w_i, 2, is_conv=False)
-            print("Pool: ", d_i, h_i, w_i)
+            # print("Pool: ", d_i, h_i, w_i)
 
             cnn_layers.append(nn.Dropout3d(p=self.dropout))
 
+        assert (d_i) > 0 and (h_i > 0) and (w_i > 0), "One dimension is 0 or negative: d {}, h {}, w {}".format(d_i, h_i, w_i)
         self.cnn = nn.Sequential(
             *cnn_layers
         )

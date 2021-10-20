@@ -12,7 +12,7 @@ from sklearn.metrics import f1_score
 from tqdm import tqdm
 import math
 from sklearn.utils import shuffle
-
+import time
 
 def run_once(args, model, dataset, ids, criterion, optimizer, is_train=False):
     losses = []
@@ -30,7 +30,6 @@ def run_once(args, model, dataset, ids, criterion, optimizer, is_train=False):
         batch_ids = ids_copy[start_id:stop_id]
         inputs = dataset[batch_ids][0]
         labels = dataset[batch_ids][1]
-        print(type(inputs), type(labels))
         inputs, labels = inputs.to(args.device), labels.to(args.device)
         if is_train:
             optimizer.zero_grad()
@@ -117,7 +116,6 @@ def main():
     # print_stats(dataset)
 
     input_dim = dataset[0][0].numpy().shape #X[0].shape[1] if args.model != "mlp" else X[0].shape[0] * X[0].shape[1]
-    print(input_dim)
     classes, occurrences = dataset.get_num_occurrences()
     output_dim = len(classes)
 
