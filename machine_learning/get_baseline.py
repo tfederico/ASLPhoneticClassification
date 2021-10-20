@@ -3,10 +3,10 @@ import random
 import numpy as np
 from sklearn.metrics import f1_score
 from sklearn.model_selection import train_test_split
-from asl_ml.preprocessing import preprocess_dataset
+from machine_learning.preprocessing import preprocess_dataset
 from sklearn.dummy import DummyClassifier
 
-metrics = ["micro", "macro", "weighted"]
+metrics = ["micro", "macro"]
 test_size = 0.15
 
 different_length = True
@@ -14,7 +14,7 @@ different_length = True
 drop_features_lr = ["Heel", "Knee", "Hip", "Toe", "Pinkie", "Ankle"]
 drop_features_center = ["Hip.Center"]
 
-labels = ["Movement", "MajorLocation", "SignType"]
+labels = ["MajorLocation", "SignType"]
 
 random_seeds = [1483533434, 3708593420, 1435909850, 1717893437, 2058363314, 375901956, 3122268818, 3001508778, 278900983, 4174692793]
 

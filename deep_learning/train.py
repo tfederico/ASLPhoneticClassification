@@ -2,8 +2,8 @@ import torch
 import random
 import numpy as np
 from tqdm import tqdm
-from asl_dl.asl_model import ASLModel, ASLModelGRU, ASLModelMLP
-from asl_data.asl_dataset import ASLDataset
+from deep_learning.models import ASLModelLSTM, ASLModelGRU, ASLModelMLP, ASLModel3DCNN
+from data.dataset import ASLDataset, CompleteASLDataset
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import f1_score
 from torch.nn import CrossEntropyLoss
@@ -11,7 +11,7 @@ from torch.utils.tensorboard import SummaryWriter
 from torch.utils.data import DataLoader
 from sklearn.model_selection import StratifiedKFold
 import adabound
-from asl_dl.parser import get_parser
+from deep_learning.parser import get_parser
 import json
 
 
@@ -52,12 +52,20 @@ def get_model(args, input_dim, output_dim):
     if args.model == "mlp":
         return ASLModelMLP(input_dim, args.hidden_dim, output_dim, n_lin_layers=args.n_lin_layers,
                            lin_dropout=args.lin_dropout, batch_norm=args.batch_norm)
+    elif args.model == "3dcnn":
+        return ASLModel3DCNN(d_in=input_dim[1], h_in=input_dim[2], w_in=input_dim[3], n_cnn_layers=args.n_layers,
+                             in_channels=input_dim[0], out_channels=args.out_channels, kernel_size=args.kernel_size,
+                             pool_size=args.pool_size, n_lin_layers=args.n_lin_layers, hidden_dim=args.hidden_dim,
+                             out_dim=output_dim, c_stride=args.c_stride, c_padding=args.c_padding,
+                             c_dilation=args.c_dilation, c_groups=args.c_groups, p_stride=args.p_stride,
+                             p_padding=args.p_padding, p_dilation=args.p_dilation, dropout=args.dropout,
+                             lin_dropout=args.lin_dropout, batch_norm=args.batch_norm)
     elif args.model == "lstm":
-        model = ASLModel
+        model = ASLModelLSTM
     elif args.model == "gru":
         model = ASLModelGRU
     else:
-        raise ValueError("Invalid value for model, must be either \"lstm\" or \"gru\", got {}".format(args.model))
+        raise ValueError("Invalid value for model, must be either \"mlp\", \"3dcnn\", \"lstm\" or \"gru\", got {}".format(args.model))
     return model(input_dim, args.hidden_dim, args.n_layers, output_dim, batch_first=True,
                  dropout=args.dropout, bidirectional=args.bidirectional,
                  n_lin_layers=args.n_lin_layers, lin_dropout=args.lin_dropout,
@@ -159,7 +167,7 @@ def main():
         folder_name = "interpolated_csvs"
     else:
         folder_name = "csvs"
-    dataset = ASLDataset(folder_name, "reduced_SignData.csv",
+    dataset = CompleteASLDataset(folder_name, "reduced_SignData.csv",
                          sel_labels=["SignType"], drop_features=["Heel", "Knee", "Hip", "Toe", "Pinkie", "Ankle"],
                          different_length=not args.interpolated)
     # print_stats(dataset)
@@ -180,10 +188,10 @@ def main():
     out_log = {}
     out_log["args"] = args.__dict__
 
-    min_train_loss_per_fold, max_train_f1_score_per_fold, min_val_loss_per_fold, max_val_f1_score_per_fold = perform_validation(args, X_train, y_train,
-                                                                                                                                weights, input_dim,
+    min_train_loss_per_fold, max_train_f1_score_per_fold, min_val_loss_per_fold, max_val_f1_score_per_fold = perform_validation(args, X_train, y_train,                                                                                                      weights, input_dim,
                                                                                                                                 output_dim, writer,
                                                                                                                                 log_dir)
+
     out_log["min_train_loss_per_fold"] = min_train_loss_per_fold
     out_log["max_train_f1_score_per_fold"] = max_train_f1_score_per_fold
     out_log["min_val_loss_per_fold"] = min_val_loss_per_fold

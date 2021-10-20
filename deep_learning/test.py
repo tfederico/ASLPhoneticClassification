@@ -2,14 +2,13 @@ import torch
 import random
 import numpy as np
 import pandas as pd
-from asl_data.asl_dataset import ASLDataset
+from data.dataset import ASLDataset, CompleteASLDataset
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import f1_score
 from sklearn.metrics import confusion_matrix
-from torch.utils.tensorboard import SummaryWriter
 from torch.utils.data import DataLoader
 import json
-from asl_dl.train_lstm import get_loss, get_model, run_once, seed_worker, get_lr_optimizer, get_lr_scheduler
+from deep_learning.train import get_loss, get_model, run_once, seed_worker, get_lr_optimizer, get_lr_scheduler
 from dotmap import DotMap
 from tqdm import tqdm
 
@@ -62,14 +61,14 @@ def test(args, X_test, y_test, weights, input_dim, output_dim, log_dir):
 def main():
     use_loss = True # true for loss, false for f1 score
 
-    labels = ["Movement", "SignType", "MajorLocation"]
+    labels = ["SignType", "MajorLocation"]
     models = ["mlp", "gru", "lstm"]
 
-    best_dict_movement = dict(mlp="Jun19_12-05-25_824c78007764", gru="Jun19_14-04-11_d11bbfeea33f", lstm="Jun19_21-51-37_d23428c5e3ac")
+    # best_dict_movement = dict(mlp="Jun19_12-05-25_824c78007764", gru="Jun19_14-04-11_d11bbfeea33f", lstm="Jun19_21-51-37_d23428c5e3ac")
     best_dict_sign_type = dict(mlp="Jun18_11-10-34_d33faca24ba3", gru="Jun19_00-20-17_d6924f8950bf", lstm="Jun18_13-10-56_7d03cdf3b46f")
     best_dict_major_loc = dict(mlp="Jun14_10-46-21_c4326084d471", gru="Jun16_08-54-52_6dfcb86d951b", lstm="Jun14_13-18-46_eff1ca3fcc55")
 
-    best_dicts = [best_dict_movement, best_dict_sign_type, best_dict_major_loc]
+    best_dicts = [best_dict_sign_type, best_dict_major_loc]
 
     best_folders = dict(zip(labels, best_dicts))
 
@@ -88,7 +87,7 @@ def main():
                 folder_name = "csvs"
             args.epochs = 50
             log_dir = "test_results"
-            dataset = ASLDataset(folder_name, "reduced_SignData.csv",
+            dataset = CompleteASLDataset(folder_name, "reduced_SignData.csv",
                                  sel_labels=[feature], drop_features=["Heel", "Knee", "Hip", "Toe", "Pinkie", "Ankle"],
                                  different_length=not args.interpolated)
 

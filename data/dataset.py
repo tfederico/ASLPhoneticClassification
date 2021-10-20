@@ -1,4 +1,5 @@
 import torch
+import torchvision
 import numpy as np
 from os import path
 from os.path import join
@@ -9,6 +10,7 @@ from sklearn.preprocessing import LabelEncoder
 import json
 from tqdm import tqdm
 import pandas as pd
+import cv2
 
 
 class ASLDataset(Dataset):
@@ -88,9 +90,9 @@ class ASLDataset(Dataset):
 
         motion = self.motions[idx]
         labels = self.labels[idx]
-        sample = motion, labels
         if self.transform:
-            sample = self.transform(sample)
+            motion = self.transform(motion)
+        sample = motion, labels
         return sample
 
 
@@ -170,3 +172,121 @@ class CompleteASLDataset(ASLDataset):
         ldf.loc[ldf['EntryID'] == "frenchfries", ['EntryID']] = "french fries"
         ldf.loc[ldf['EntryID'] == "icecream", ['EntryID']] = "ice cream"
         self.labels = ldf
+
+
+class CompleteVideoASLDataset(CompleteASLDataset):
+    def __init__(self, motion_path, labels_path, sel_labels, drop_features=[], transform=None, different_length=False, map_file="WLASL_v0.3.json"):
+        self.n_output_classes = -1
+        super().__init__(motion_path, labels_path, sel_labels, drop_features, transform, different_length, map_file)
+
+    def _load_motions(self):
+        motion_files = sorted(listdir(self.motion_path))
+        for motion_file in tqdm(motion_files):
+            vframes, aframes, info = torchvision.io.read_video(join(self.motion_path, motion_file))
+            self.max_length = max(self.max_length, len(vframes))
+            self.motions_keys.append(motion_file.replace(".mp4", ""))
+        self.motions_keys = np.array(self.motions_keys)
+        assert len(self.motions_keys) == len(np.unique(self.motions_keys)), "Some motion files are not unique {}".format(
+            self.motions_keys[np.unique(self.motions_keys, return_inverse=True, return_counts=True)[1] > 1])
+
+    def _join_and_remove(self):
+        with open(self.map_file, "r") as fp:
+            wlasl_v03 = json.load(fp)
+
+        gloss_id_dict = {}
+        for gloss_dict in wlasl_v03:
+            gloss = gloss_dict["gloss"]
+            ids = []
+            for instance in gloss_dict["instances"]:
+                ids.append(instance["video_id"])
+            gloss_id_dict[gloss] = ids
+
+        rev_gloss_id_dict = {}
+
+        for k, v in gloss_id_dict.items():
+            if isinstance(v, list):
+                for val in v:
+                    rev_gloss_id_dict[val] = k
+            else:
+                rev_gloss_id_dict[v] = k
+
+        files = set(self.motions_keys).intersection(set(rev_gloss_id_dict.keys())) # remove from all ids the one who don't have an associated video
+        labels = set(self.labels["EntryID"].values)
+        files = set([rev_gloss_id_dict[v].lower() for v in files])
+        common = files.intersection(labels)
+        all_good_ids = []
+        for c in common:
+            videos_ids = gloss_id_dict[c]
+            all_good_ids += videos_ids
+        positions = [np.where(self.motions_keys == c)[0] for c in all_good_ids if np.isin(c, self.motions_keys)]
+        positions = np.array(positions).flatten()
+        self.motions_keys = self.motions_keys[positions]
+        self.labels = [self.labels[self.labels["EntryID"] == rev_gloss_id_dict[v]] for v in self.motions_keys]
+        self.labels = pd.concat(self.labels)
+        drop_cols = [c for c in self.labels.columns if c not in self.sel_labels]
+        self.labels.drop(drop_cols, axis="columns", inplace=True)
+
+    def _preprocessing(self):
+        self.labels = LabelEncoder().fit_transform(self.labels.to_numpy())
+
+    def _pad_sequence(self, sequence):
+        diff = self.max_length - len(sequence)
+        if diff == 0:
+            return sequence
+        else:
+            pad_dim = (diff,) + sequence.shape[1:]
+            pad = torch.zeros(pad_dim)
+            seq = torch.cat((sequence, pad))
+            return seq
+
+    def __getitem__(self, idx):
+        if torch.is_tensor(idx):
+            idx = idx.tolist()
+
+        labels = self.labels[idx]
+        if not isinstance(labels, (list, np.ndarray)):
+            labels = np.asarray(labels)
+        motion_key = self.motions_keys[idx]
+        if isinstance(motion_key, (np.ndarray, list)):
+            data = []
+            for i in range(len(labels)):
+                cap = cv2.VideoCapture(join(self.motion_path, motion_key[i] + ".mp4"))
+                motion = []
+                while cap.isOpened():
+                    ret, frame = cap.read()
+                    if not (frame is None):
+                        if self.transform:
+                            frame = self.transform(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
+                        motion.append(frame)
+                    else:
+                        break
+                cap.release()
+                motion = self._pad_sequence(torch.stack(motion))
+                data.append(motion)
+            data = torch.stack(data)
+            data = data.permute(0, 2, 1, 3, 4)
+        else:
+            cap = cv2.VideoCapture(join(self.motion_path, motion_key+".mp4"))
+            motion = []
+            while cap.isOpened():
+                ret, frame = cap.read()
+                if not (frame is None):
+                    if self.transform:
+                        frame = self.transform(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
+                    motion.append(frame)
+                else:
+                    break
+            cap.release()
+            data = self._pad_sequence(torch.stack(motion))
+            data = data.permute(1, 0, 2, 3)
+        sample = data, torch.from_numpy(labels)
+        return sample
+
+    def get_max_length(self):
+        return self.max_length
+
+    def get_num_occurrences(self):
+        return np.unique(self.labels, return_counts=True)
+
+    def get_labels(self):
+        return self.labels
