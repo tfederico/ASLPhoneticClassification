@@ -115,6 +115,7 @@ def main():
                                       different_length=not args.interpolated, transform=transforms)
 
     # print_stats(dataset)
+
     input_dim = dataset[0][0].numpy().shape #X[0].shape[1] if args.model != "mlp" else X[0].shape[0] * X[0].shape[1]
     print(input_dim)
     classes, occurrences = dataset.get_num_occurrences()
