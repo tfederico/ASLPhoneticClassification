@@ -165,7 +165,7 @@ class ASLModelGRU(ASLModelLSTM):
 
 class ASLModel3DCNN(ASLModel):
     def __init__(self, d_in, h_in, w_in, n_cnn_layers, in_channels, out_channels, kernel_size, pool_size,
-                 n_lin_layers, hidden_dim, out_dim,
+                 pool_freq, n_lin_layers, hidden_dim, out_dim,
                  c_stride=1, c_padding=0, c_dilation=1, c_groups=1,
                  p_stride=None, p_padding=0, p_dilation=1,
                  dropout=0, lin_dropout=0, batch_norm=False):
@@ -180,7 +180,7 @@ class ASLModel3DCNN(ASLModel):
         self.out_channels = out_channels
         self.kernel_size = kernel_size if isinstance(kernel_size, (list, tuple)) else (kernel_size, kernel_size, kernel_size)
         self.pool_size = pool_size if isinstance(pool_size, (list, tuple)) else (pool_size, pool_size, pool_size)
-
+        self.pool_freq = pool_freq
         # Linear layers parameters
         self.n_lin_layers = n_lin_layers
         self.hidden_dim = hidden_dim
@@ -230,19 +230,20 @@ class ASLModel3DCNN(ASLModel):
             w_i = self._calc_out(w_i, 2)
             # print("Conv: ", d_i, h_i, w_i)
             cnn_layers.append(nn.ReLU())
-            cnn_layers.append(nn.MaxPool3d(self.pool_size, self.p_stride, self.p_padding, self.p_dilation))
-            d_i = self._calc_out(d_i, 0, is_conv=False)
-            h_i = self._calc_out(h_i, 1, is_conv=False)
-            w_i = self._calc_out(w_i, 2, is_conv=False)
+            if (self.pool_freq == 1) or (i % self.pool_freq == 0 and i != 0):
+                cnn_layers.append(nn.MaxPool3d(self.pool_size, self.p_stride, self.p_padding, self.p_dilation))
+                d_i = self._calc_out(d_i, 0, is_conv=False)
+                h_i = self._calc_out(h_i, 1, is_conv=False)
+                w_i = self._calc_out(w_i, 2, is_conv=False)
             # print("Pool: ", d_i, h_i, w_i)
 
             cnn_layers.append(nn.Dropout3d(p=self.dropout))
 
-        assert (d_i) > 0 and (h_i > 0) and (w_i > 0), "One dimension is 0 or negative: d {}, h {}, w {}".format(d_i, h_i, w_i)
+        assert (d_i > 0) and (h_i > 0) and (w_i > 0), "One dimension is 0 or negative: d {}, h {}, w {}".format(d_i, h_i, w_i)
+
         self.cnn = nn.Sequential(
             *cnn_layers
         )
-
 
         self.first_in = d_i * h_i * w_i * self.out_channels[i]
         self.mlp = ASLModelMLP(self.first_in, self.hidden_dim, self.out_dim, self.n_lin_layers, self.lin_dropout, self.batch_norm)

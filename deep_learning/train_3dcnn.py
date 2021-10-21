@@ -1,18 +1,19 @@
 import torch
 import torchvision
 import random
+import pickle
 import numpy as np
-from data.dataset import ASLDataset, CompleteASLDataset, CompleteVideoASLDataset
+from data.dataset import CompleteVideoASLDataset
 from torch.utils.tensorboard import SummaryWriter
 from deep_learning.parser import get_parser
 import json
 from deep_learning.train import seed_worker, get_loss, get_model, get_lr_scheduler, get_lr_optimizer
-from sklearn.model_selection import StratifiedShuffleSplit, train_test_split
+from sklearn.model_selection import train_test_split
 from sklearn.metrics import f1_score
 from tqdm import tqdm
 import math
 from sklearn.utils import shuffle
-import time
+
 
 def run_once(args, model, dataset, ids, criterion, optimizer, is_train=False):
     losses = []
@@ -24,7 +25,7 @@ def run_once(args, model, dataset, ids, criterion, optimizer, is_train=False):
         ids_copy = shuffle(ids_copy, random_state=args.seed)
 
     torch.set_grad_enabled(is_train)
-    for i in range(num_batches):
+    for i in tqdm(range(num_batches), leave=False):
         start_id = i*args.batch_size
         stop_id = (i+1)*args.batch_size if (i+1)*args.batch_size < len(ids) else len(ids)
         batch_ids = ids_copy[start_id:stop_id]
@@ -98,8 +99,6 @@ def main():
     np.random.seed(args.seed)
     random.seed(args.seed)
 
-    folder_name = "WLASL10"
-
 
     transforms = torchvision.transforms.Compose(
         [
@@ -109,9 +108,13 @@ def main():
         ]
     )
     sel_labels = ["MajorLocation"]
-    dataset = CompleteVideoASLDataset(folder_name, "reduced_SignData.csv", sel_labels=sel_labels,
-                                      drop_features=["Heel", "Knee", "Hip", "Toe", "Pinkie", "Ankle"],
-                                      different_length=not args.interpolated, transform=transforms)
+    # folder_name = "WLASL2000"
+    # dataset = CompleteVideoASLDataset(folder_name, "reduced_SignData.csv", sel_labels=sel_labels,
+    #                                   drop_features=["Heel", "Knee", "Hip", "Toe", "Pinkie", "Ankle"],
+    #                                   different_length=not args.interpolated, transform=transforms)
+    with open("data/small_{}_video_dataset.pkl".format("majloc" if ["MajorLocation"] == sel_labels else "signtype"), "rb") as fp:
+        dataset = pickle.load(fp)
+        dataset.set_transforms(transforms)
 
     # print_stats(dataset)
 

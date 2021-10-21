@@ -290,3 +290,6 @@ class CompleteVideoASLDataset(CompleteASLDataset):
 
     def get_labels(self):
         return self.labels
+
+    def set_transforms(self, transforms):
+        self.transform = transforms
