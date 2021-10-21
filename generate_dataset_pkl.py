@@ -1,7 +1,7 @@
 import torch
 import random
 import numpy as np
-from data.dataset import ASLDataset, CompleteASLDataset
+from data.dataset import ASLDataset, CompleteASLDataset, CompleteVideoASLDataset
 from deep_learning.parser import get_parser
 import pickle
 
@@ -23,6 +23,13 @@ def main():
                          different_length=not args.interpolated)
 
     with open("data/{}_dataset.pkl".format("majloc" if ["MajorLocation"] == sel_labels else "signtype"), "wb") as fp:
+        pickle.dump(dataset, fp)
+
+    dataset = CompleteVideoASLDataset("WLASL2000", "reduced_SignData.csv", sel_labels=sel_labels,
+                                      drop_features=[],
+                                      different_length=not args.interpolated, transform=None)
+
+    with open("data/{}_video_dataset.pkl".format("majloc" if ["MajorLocation"] == sel_labels else "signtype"), "wb") as fp:
         pickle.dump(dataset, fp)
 
 

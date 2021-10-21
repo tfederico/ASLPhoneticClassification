@@ -7,7 +7,7 @@ data/reduced_SignData.csv
 data/csvs
 data/small_csvs
 data/*.pkl
-data/WLASL*
+data/*WLASL2000
 data/*.mp4
 data/interpolated_csvs
 *.pdf
