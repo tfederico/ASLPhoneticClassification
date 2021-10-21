@@ -251,13 +251,3 @@ class ASLModel3DCNN(ASLModel):
         out = self.cnn(x)
         return self.mlp(out.reshape((-1, self.first_in)))
 
-
-if __name__ == "__main__":
-    import torch
-    input = torch.randn(8, 3, 20, 256, 256)
-    net = ASLModel3DCNN(20, 256, 256, 1, 3, [9], 3, 4, 2, 512, 6)
-    print(net(input).shape)
-    # print(input.shape)
-    # pool = nn.MaxPool3d(3, c_stride=3, padding=1)
-    # out = pool(input)
-    # print(out.shape)
