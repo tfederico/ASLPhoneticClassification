@@ -55,11 +55,11 @@ def get_model(args, input_dim, output_dim):
     elif args.model == "3dcnn":
         return ASLModel3DCNN(d_in=input_dim[1], h_in=input_dim[2], w_in=input_dim[3], n_cnn_layers=args.n_layers,
                              in_channels=input_dim[0], out_channels=args.out_channels, kernel_size=args.kernel_size,
-                             pool_size=args.pool_size, n_lin_layers=args.n_lin_layers, hidden_dim=args.hidden_dim,
-                             out_dim=output_dim, c_stride=args.c_stride, c_padding=args.c_padding,
-                             c_dilation=args.c_dilation, c_groups=args.c_groups, p_stride=args.p_stride,
-                             p_padding=args.p_padding, p_dilation=args.p_dilation, dropout=args.dropout,
-                             lin_dropout=args.lin_dropout, batch_norm=args.batch_norm)
+                             pool_size=args.pool_size, pool_freq=args.pool_freq, n_lin_layers=args.n_lin_layers,
+                             hidden_dim=args.hidden_dim, out_dim=output_dim, c_stride=args.c_stride,
+                             c_padding=args.c_padding, c_dilation=args.c_dilation, c_groups=args.c_groups,
+                             p_stride=args.p_stride, p_padding=args.p_padding, p_dilation=args.p_dilation,
+                             dropout=args.dropout, lin_dropout=args.lin_dropout, batch_norm=args.batch_norm)
     elif args.model == "lstm":
         model = ASLModelLSTM
     elif args.model == "gru":
