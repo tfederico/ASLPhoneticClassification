@@ -2,7 +2,8 @@ import torch
 import random
 import numpy as np
 from tqdm import tqdm
-from deep_learning.models import ASLModelLSTM, ASLModelGRU, ASLModelMLP, ASLModel3DCNN
+from deep_learning.models import ASLModelLSTM, ASLModelGRU, ASLModelMLP, ASLModel3DCNN, ASLModelI3D
+from deep_learning.i3d import InceptionI3d
 from data.dataset import CompleteASLDataset
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import f1_score
@@ -60,6 +61,11 @@ def get_model(args, input_dim, output_dim):
                              c_padding=args.c_padding, c_dilation=args.c_dilation, c_groups=args.c_groups,
                              p_stride=args.p_stride, p_padding=args.p_padding, p_dilation=args.p_dilation,
                              dropout=args.dropout, lin_dropout=args.lin_dropout, batch_norm=args.batch_norm)
+    elif args.model == "i3d":
+        model = ASLModelI3D(d_in=input_dim[1], h_in=input_dim[2], w_in=input_dim[3], in_channels=input_dim[0],
+                            n_lin_layers=args.n_lin_layers, hidden_dim=args.hidden_dim, out_dim=output_dim,
+                            dropout=args.dropout, lin_dropout=args.lin_dropout, batch_norm=args.batch_norm)
+        return model
     elif args.model == "lstm":
         model = ASLModelLSTM
     elif args.model == "gru":
