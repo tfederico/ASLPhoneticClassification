@@ -108,7 +108,7 @@ def main():
         ]
     )
     sel_labels = ["MajorLocation"]
-    # folder_name = "WLASL2000"
+    # folder_name = "small_WLASL2000"
     # dataset = CompleteVideoASLDataset(folder_name, "reduced_SignData.csv", sel_labels=sel_labels,
     #                                   drop_features=["Heel", "Knee", "Hip", "Toe", "Pinkie", "Ankle"],
     #                                   different_length=not args.interpolated, transform=transforms)

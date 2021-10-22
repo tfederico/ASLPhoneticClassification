@@ -1,5 +1,6 @@
 import argparse
 
+
 def str2bool(v):
     if isinstance(v, bool):
        return v
@@ -10,6 +11,7 @@ def str2bool(v):
     else:
         raise argparse.ArgumentTypeError('Boolean value expected.')
 
+
 def get_parser():
     parser = argparse.ArgumentParser(description="ASL-Lex feature recognition")
     parser.add_argument('--device', default="cuda:0", type=str, help='device id')
@@ -17,7 +19,7 @@ def get_parser():
     parser.add_argument('--n_layers', default=0, type=int, help='# layers lstm')
     parser.add_argument('--n_lin_layers', default=2, type=int, help='# linear layers')
     parser.add_argument('--hidden_dim', default=64, type=int, help='# hidden units in lstm')
-    parser.add_argument('--dropout', default=0.0, type=float, help='lstm dropout')
+    parser.add_argument('--dropout', default=0.0, type=float, help='dropout')
     parser.add_argument('--lin_dropout', default=0.0, type=float, help='linear dropout')
     parser.add_argument('--bidirectional', type=str2bool, default=True, choices=[True, False], help='bidirectional lstm')
     parser.add_argument('--epochs', default=100, type=int, help='# epochs')
