@@ -22,14 +22,14 @@ def main():
                          sel_labels=sel_labels, drop_features=["Heel", "Knee", "Hip", "Toe", "Pinkie", "Ankle"],
                          different_length=not args.interpolated)
 
-    with open("data/{}_dataset.pkl".format("majloc" if ["MajorLocation"] == sel_labels else "signtype"), "wb") as fp:
+    with open("data/pkls/{}_dataset.pkl".format("majloc" if ["MajorLocation"] == sel_labels else "signtype"), "wb") as fp:
         pickle.dump(dataset, fp)
 
     dataset = CompleteVideoASLDataset("WLASL2000", "reduced_SignData.csv", sel_labels=sel_labels,
                                       drop_features=[],
                                       different_length=not args.interpolated, transform=None)
 
-    with open("data/{}_video_dataset.pkl".format("majloc" if ["MajorLocation"] == sel_labels else "signtype"), "wb") as fp:
+    with open("data/pkls/{}_video_dataset.pkl".format("majloc" if ["MajorLocation"] == sel_labels else "signtype"), "wb") as fp:
         pickle.dump(dataset, fp)
 
 

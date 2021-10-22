@@ -39,7 +39,7 @@ def main():
     # dataset = CompleteASLDataset(folder_name, "reduced_SignData.csv",
     #                      sel_labels=sel_labels, drop_features=["Heel", "Knee", "Hip", "Toe", "Pinkie", "Ankle"],
     #                      different_length=not args.interpolated)
-    with open("data/{}_dataset.pkl".format("majloc" if ["MajorLocation"] == sel_labels else "signtype"), "rb") as fp:
+    with open("data/pkls/{}_dataset.pkl".format("majloc" if ["MajorLocation"] == sel_labels else "signtype"), "rb") as fp:
         dataset = pickle.load(fp)
 
     # print_stats(dataset)
