@@ -15,7 +15,7 @@ def str2bool(v):
 def get_parser():
     parser = argparse.ArgumentParser(description="ASL-Lex feature recognition")
     parser.add_argument('--device', default="cuda:0", type=str, help='device id')
-    parser.add_argument('--model', default="mlp", type=str, help='memory unit', choices=['lstm', 'gru', "mlp", "3dcnn"])
+    parser.add_argument('--model', default="mlp", type=str, help='memory unit', choices=['lstm', 'gru', "mlp", "3dcnn", "i3d"])
     parser.add_argument('--n_layers', default=0, type=int, help='# layers lstm')
     parser.add_argument('--n_lin_layers', default=2, type=int, help='# linear layers')
     parser.add_argument('--hidden_dim', default=64, type=int, help='# hidden units in lstm')
