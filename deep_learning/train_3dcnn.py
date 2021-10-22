@@ -3,11 +3,10 @@ import torchvision
 import random
 import pickle
 import numpy as np
-from data.dataset import CompleteVideoASLDataset
 from torch.utils.tensorboard import SummaryWriter
-from deep_learning.parser import get_parser
+from utils.parser import get_parser
 import json
-from deep_learning.train import seed_worker, get_loss, get_model, get_lr_scheduler, get_lr_optimizer
+from deep_learning.train import get_loss, get_model, get_lr_scheduler, get_lr_optimizer
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import f1_score
 from tqdm import tqdm

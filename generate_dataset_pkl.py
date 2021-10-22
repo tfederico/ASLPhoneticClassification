@@ -1,8 +1,8 @@
 import torch
 import random
 import numpy as np
-from data.dataset import ASLDataset, CompleteASLDataset, CompleteVideoASLDataset
-from deep_learning.parser import get_parser
+from data.dataset import CompleteASLDataset, CompleteVideoASLDataset
+from utils.parser import get_parser
 import pickle
 
 

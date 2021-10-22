@@ -150,5 +150,5 @@ for elem in tqdm(grid):
 
     cmd += "\n"
 
-with open("commands.txt", "w") as fp:
+with open("../deep_learning/commands.txt", "w") as fp:
     fp.write(cmd)
