@@ -34,8 +34,8 @@ def run_once(args, model, dataset, ids, criterion, optimizer, is_train=False):
         if is_train:
             optimizer.zero_grad()
         output = model(inputs)
-        loss = criterion(output.squeeze(), labels.squeeze())
-        gt.append(labels.squeeze().detach().cpu().numpy())
+        loss = criterion(output.squeeze() if labels.shape[0] != 1 else output, labels.squeeze() if labels.shape[0] != 1 else labels)
+        gt.append(labels.squeeze().detach().cpu().numpy() if labels.shape[0] != 1 else labels.detach().cpu().numpy())
         outs.append(torch.argmax(torch.nn.functional.softmax(output.detach().cpu(), dim=1), dim=1).numpy())
         losses.append(loss.item())
         if is_train:
@@ -43,7 +43,10 @@ def run_once(args, model, dataset, ids, criterion, optimizer, is_train=False):
             optimizer.step()
     torch.set_grad_enabled(not is_train)
 
-    return losses, np.concatenate(outs), np.concatenate(gt)
+    outs = np.concatenate(outs)
+    gt = np.concatenate(gt)
+
+    return losses, outs, gt
 
 
 def train_n_epochs(args, dataset, train_ids, val_ids, weights, input_dim, output_dim, writer, log_dir, tag):

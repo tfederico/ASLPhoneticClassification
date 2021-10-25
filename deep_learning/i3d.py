@@ -32,7 +32,6 @@ class MaxPool3dSamePadding(nn.MaxPool3d):
         pad_h_b = pad_h - pad_h_f
         pad_w_f = pad_w // 2
         pad_w_b = pad_w - pad_w_f
-
         pad = (pad_w_f, pad_w_b, pad_h_f, pad_h_b, pad_t_f, pad_t_b)
         # print x.size()
         # print pad
@@ -137,9 +136,12 @@ class InceptionModule(nn.Module):
 
     def forward(self, x):
         b0 = self.b0(x)
-        b1 = self.b1b(self.b1a(x))
-        b2 = self.b2b(self.b2a(x))
-        b3 = self.b3b(self.b3a(x))
+        b1a = self.b1a(x)
+        b1 = self.b1b(b1a)
+        b2a = self.b2a(x)
+        b2 = self.b2b(b2a)
+        b3a = self.b3a(x)
+        b3 = self.b3b(b3a)
         return torch.cat([b0, b1, b2, b3], dim=1)
 
 
@@ -313,6 +315,10 @@ class InceptionI3d(nn.Module):
     def build(self):
         for k in self.end_points.keys():
             self.add_module(k, self.end_points[k])
+
+        if self._final_endpoint != "Logits":
+            self.avg_pool = nn.AvgPool3d(kernel_size=[2, 7, 7],
+                                         stride=(1, 1, 1))
 
     def forward(self, x):
         for end_point in self.VALID_ENDPOINTS:
