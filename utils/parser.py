@@ -22,7 +22,7 @@ def get_parser():
     parser.add_argument('--dropout', default=0.0, type=float, help='dropout')
     parser.add_argument('--lin_dropout', default=0.0, type=float, help='linear dropout')
     parser.add_argument('--bidirectional', type=str2bool, default=True, choices=[True, False], help='bidirectional lstm')
-    parser.add_argument('--epochs', default=100, type=int, help='# epochs')
+    parser.add_argument('--epochs', default=50, type=int, help='# epochs')
     parser.add_argument('--batch_size', default=16, type=int, help='batch size')
     parser.add_argument('--weighted_loss', default=False, type=str2bool, choices=[True, False], help='whether to use weights for the loss')
     parser.add_argument('--optimizer', default='adam', type=str, help='optimizer', choices=['sgd', 'adam', 'adabound'])
