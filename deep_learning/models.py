@@ -220,7 +220,6 @@ class ASLModel3DCNN(ASLModel):
         d_i = self.d_in
         h_i = self.h_in
         w_i = self.w_in
-        # print("Input: ", d_i, h_i, w_i)
         for i in range(self.n_cnn_layers):
             in_channels = self.in_channels if i == 0 else self.out_channels[i-1]
             cnn_layers.append(nn.Conv3d(in_channels, self.out_channels[i], self.kernel_size, self.c_stride,
@@ -228,14 +227,12 @@ class ASLModel3DCNN(ASLModel):
             d_i = self._calc_out(d_i, 0)
             h_i = self._calc_out(h_i, 1)
             w_i = self._calc_out(w_i, 2)
-            # print("Conv: ", d_i, h_i, w_i)
             cnn_layers.append(nn.ReLU())
             if (self.pool_freq == 1) or (i % self.pool_freq == 0 and i != 0):
                 cnn_layers.append(nn.MaxPool3d(self.pool_size, self.p_stride, self.p_padding, self.p_dilation))
                 d_i = self._calc_out(d_i, 0, is_conv=False)
                 h_i = self._calc_out(h_i, 1, is_conv=False)
                 w_i = self._calc_out(w_i, 2, is_conv=False)
-            # print("Pool: ", d_i, h_i, w_i)
 
             cnn_layers.append(nn.Dropout3d(p=self.dropout))
 
@@ -279,56 +276,58 @@ class ASLModelI3D(ASLModel):
             temp = (temp - 1) / self.p_stride[i]
         return math.floor(temp + 1)
 
-    def _update(self, d_i, h_i, w_i, is_conv=True):
+    def _update(self, d_i, h_i, w_i, is_conv):
         d_i = self._calc_out(d_i, 0, is_conv)
         w_i = self._calc_out(w_i, 2, is_conv)
         h_i = self._calc_out(h_i, 1, is_conv)
         return d_i, h_i, w_i
 
 
-    def _compute_pad(self, s, dim, is_conv=False):
+    def _compute_pad(self, s, dim, is_conv):
         if not is_conv:
             if s % self.p_stride[dim] == 0:
-                return max(self.pool_size[dim] - self.p_stride[dim], 0)
+                return max(self.pool_size[dim] - self.p_stride[dim], 0)/2
             else:
-                return max(self.pool_size[dim] - (s % self.p_stride[dim]), 0)
+                return max(self.pool_size[dim] - (s % self.p_stride[dim]), 0)/2
         else:
             if s % self.c_stride[dim] == 0:
-                return max(self.kernel_size[dim] - self.c_stride[dim], 0)
+                return max(self.kernel_size[dim] - self.c_stride[dim], 0)/2
             else:
-                return max(self.kernel_size[dim] - (s % self.c_stride[dim]), 0)
+                return max(self.kernel_size[dim] - (s % self.c_stride[dim]), 0)/2
 
     def _update_mixed(self, d_i, h_i, w_i):
         # Conv3d_0a_1x1
         self.kernel_size, self.c_stride = [1, 1, 1], [1, 1, 1]
         self.c_padding = [0, 0, 0]
-        d_i, h_i, w_i = self._update(d_i, h_i, w_i)
+        d_i, h_i, w_i = self._update(d_i, h_i, w_i, is_conv=True)
         # Conv3d_0a_1x1
-        d_i, h_i, w_i = self._update(d_i, h_i, w_i)
+        d_i, h_i, w_i = self._update(d_i, h_i, w_i, is_conv=True)
         # Conv3d_0b_3x3
         self.kernel_size, self.c_stride = [3, 3, 3], [1, 1, 1]
-        self.c_padding = [self._compute_pad(d_i, 0, is_conv=True)//2, self._compute_pad(h_i, 1, is_conv=True)//2, self._compute_pad(w_i, 2, is_conv=True)//2]
-        d_i, h_i, w_i = self._update(d_i, h_i, w_i)
+        self.c_padding = [self._compute_pad(d_i, 0, is_conv=True), self._compute_pad(h_i, 1, is_conv=True), self._compute_pad(w_i, 2, is_conv=True)]
+        d_i, h_i, w_i = self._update(d_i, h_i, w_i, is_conv=True)
         # Conv3d_0a_1x1
         self.kernel_size, self.c_stride = [1, 1, 1], [1, 1, 1]
         self.c_padding = [0, 0, 0]
-        d_i, h_i, w_i = self._update(d_i, h_i, w_i)
+        d_i, h_i, w_i = self._update(d_i, h_i, w_i, is_conv=True)
         # Conv3d_0b_3x3
         self.kernel_size, self.c_stride = [3, 3, 3], [1, 1, 1]
-        self.c_padding = [self._compute_pad(d_i, 0, is_conv=True)//2, self._compute_pad(h_i, 1, is_conv=True)//2, self._compute_pad(w_i, 2, is_conv=True)//2]
-        d_i, h_i, w_i = self._update(d_i, h_i, w_i)
+        self.c_padding = [self._compute_pad(d_i, 0, is_conv=True), self._compute_pad(h_i, 1, is_conv=True), self._compute_pad(w_i, 2, is_conv=True)]
+        d_i, h_i, w_i = self._update(d_i, h_i, w_i, is_conv=True)
         # MaxPool3D
         self.pool_size, self.p_stride = [3, 3, 3], [1, 1, 1]
-        self.p_padding = [self._compute_pad(d_i, 0)//2, self._compute_pad(h_i, 1)//2, self._compute_pad(w_i, 2)//2]
+        self.p_padding = [self._compute_pad(d_i, 0, is_conv=False), self._compute_pad(h_i, 1, is_conv=False), self._compute_pad(w_i, 2, is_conv=False)]
         d_i, h_i, w_i = self._update(d_i, h_i, w_i, is_conv=False)
         # Conv3d_0b_1x1
         self.kernel_size, self.c_stride = [1, 1, 1], [1, 1, 1]
         self.c_padding = [0, 0, 0]
-        d_i, h_i, w_i = self._update(d_i, h_i, w_i)
+        d_i, h_i, w_i = self._update(d_i, h_i, w_i, is_conv=True)
         return d_i, h_i, w_i
 
     def _build_network(self):
-        self.i3d = InceptionI3d(self.out_dim, in_channels=self.in_channels, dropout_keep_prob=self.dropout)
+        self.i3d = InceptionI3d(self.out_dim, in_channels=self.in_channels, dropout_keep_prob=self.dropout,
+                                final_endpoint="Mixed_5c", spatial_squeeze=False)
+        self.i3d.build()
         d_i = self.d_in
         w_i = self.w_in
         h_i = self.h_in
@@ -337,22 +336,22 @@ class ASLModelI3D(ASLModel):
         # 'Conv3d_1a_7x7'
         self.kernel_size, self.c_stride = [7, 7, 7], [2, 2, 2]
         self.c_padding = [3, 3, 3]
-        d_i, h_i, w_i = self._update(d_i, h_i, w_i)
+        d_i, h_i, w_i = self._update(d_i, h_i, w_i, is_conv=True)
         # 'MaxPool3d_2a_3x3'
         self.pool_size, self.p_stride = [1, 3, 3], [1, 2, 2]
-        self.p_padding = [self._compute_pad(d_i, 0), self._compute_pad(h_i, 1), self._compute_pad(w_i, 2)]
+        self.p_padding = [self._compute_pad(d_i, 0, is_conv=False), self._compute_pad(h_i, 1, is_conv=False), self._compute_pad(w_i, 2, is_conv=False)]
         d_i, h_i, w_i = self._update(d_i, h_i, w_i, is_conv=False)
         # 'Conv3d_2b_1x1',
         self.kernel_size, self.c_stride = [1, 1, 1], [1, 1, 1]
         self.c_padding = [0, 0, 0]
-        d_i, h_i, w_i = self._update(d_i, h_i, w_i)
+        d_i, h_i, w_i = self._update(d_i, h_i, w_i, is_conv=True)
         # 'Conv3d_2c_3x3',
         self.kernel_size, self.c_stride = [3, 3, 3], [1, 1, 1]
         self.c_padding = [1, 1, 1]
-        d_i, h_i, w_i = self._update(d_i, h_i, w_i)
+        d_i, h_i, w_i = self._update(d_i, h_i, w_i, is_conv=True)
         # 'MaxPool3d_3a_3x3'
         self.pool_size, self.p_stride = [1, 3, 3], [1, 2, 2]
-        self.p_padding = [self._compute_pad(d_i, 0), self._compute_pad(h_i, 1), self._compute_pad(w_i, 2)]
+        self.p_padding = [self._compute_pad(d_i, 0, is_conv=False), self._compute_pad(h_i, 1, is_conv=False), self._compute_pad(w_i, 2, is_conv=False)]
         d_i, h_i, w_i = self._update(d_i, h_i, w_i, is_conv=False)
         # 'Mixed_3b'
         d_i, h_i, w_i = self._update_mixed(d_i, h_i, w_i)
@@ -360,7 +359,7 @@ class ASLModelI3D(ASLModel):
         d_i, h_i, w_i = self._update_mixed(d_i, h_i, w_i)
         # 'MaxPool3d_4a_3x3'
         self.pool_size, self.p_stride = [3, 3, 3], [2, 2, 2]
-        self.p_padding = [self._compute_pad(d_i, 0), self._compute_pad(h_i, 1), self._compute_pad(w_i, 2)]
+        self.p_padding = [self._compute_pad(d_i, 0, is_conv=False), self._compute_pad(h_i, 1, is_conv=False), self._compute_pad(w_i, 2, is_conv=False)]
         d_i, h_i, w_i = self._update(d_i, h_i, w_i, is_conv=False)
         # 'Mixed_4b'
         d_i, h_i, w_i = self._update_mixed(d_i, h_i, w_i)
@@ -374,7 +373,7 @@ class ASLModelI3D(ASLModel):
         d_i, h_i, w_i = self._update_mixed(d_i, h_i, w_i)
         # 'MaxPool3d_5a_2x2'
         self.pool_size, self.p_stride = [2, 2, 2], [2, 2, 2]
-        self.p_padding = [self._compute_pad(d_i, 0), self._compute_pad(h_i, 1), self._compute_pad(w_i, 2)]
+        self.p_padding = [self._compute_pad(d_i, 0, is_conv=False), self._compute_pad(h_i, 1, is_conv=False), self._compute_pad(w_i, 2, is_conv=False)]
         d_i, h_i, w_i = self._update(d_i, h_i, w_i, is_conv=False)
         # 'Mixed_5b'
         d_i, h_i, w_i = self._update_mixed(d_i, h_i, w_i)
@@ -384,13 +383,13 @@ class ASLModelI3D(ASLModel):
         self.pool_size, self.p_stride = [2, 7, 7], [1, 1, 1]
         self.p_padding = [0, 0, 0]
         d_i, h_i, w_i = self._update(d_i, h_i, w_i, is_conv=False)
-        self.kernel_size, self.c_stride = [1, 1, 1], [1, 1, 1]
-        self.c_padding = [self._compute_pad(d_i, 0, is_conv=True), self._compute_pad(h_i, 1, is_conv=True), self._compute_pad(w_i, 2, is_conv=True)]
-        d_i, h_i, w_i = self._update(d_i, h_i, w_i)
-
-        self.first_in = d_i * h_i * w_i * self.in_channels
+        # self.kernel_size, self.c_stride = [1, 1, 1], [1, 1, 1]
+        # self.c_padding = [self._compute_pad(d_i, 0, is_conv=True), self._compute_pad(h_i, 1, is_conv=True), self._compute_pad(w_i, 2, is_conv=True)]
+        # d_i, h_i, w_i = self._update(d_i, h_i, w_i, is_conv=True)
+        self.first_in = d_i * h_i * w_i * 1024
         self.mlp = ASLModelMLP(self.first_in, self.hidden_dim, self.out_dim, self.n_lin_layers, self.lin_dropout, self.batch_norm)
 
     def forward(self, x):
-        out = self.i3d(x)
-        return self.mlp(out.reshape(-1, self.first_in))
+        out = self.i3d.extract_features(x)
+        out = out.view(-1, self.first_in)
+        return self.mlp(out)
