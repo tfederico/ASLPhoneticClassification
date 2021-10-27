@@ -1,3 +1,4 @@
+import torch
 from torch import nn
 import math
 from deep_learning.i3d import InceptionI3d
@@ -325,9 +326,11 @@ class ASLModelI3D(ASLModel):
         return d_i, h_i, w_i
 
     def _build_network(self):
-        self.i3d = InceptionI3d(self.out_dim, in_channels=self.in_channels, dropout_keep_prob=self.dropout,
-                                final_endpoint="Mixed_5c", spatial_squeeze=False)
-        self.i3d.build()
+        self.spatial_squeeze = True
+        self.i3d = InceptionI3d(400, in_channels=self.in_channels, dropout_keep_prob=self.dropout,
+                                final_endpoint="Logits", spatial_squeeze=self.spatial_squeeze)
+        self.i3d.load_state_dict(torch.load('data/weights/rgb_imagenet.pt'))
+        self.i3d.replace_logits(self.out_dim)
         d_i = self.d_in
         w_i = self.w_in
         h_i = self.h_in
@@ -383,13 +386,47 @@ class ASLModelI3D(ASLModel):
         self.pool_size, self.p_stride = [2, 7, 7], [1, 1, 1]
         self.p_padding = [0, 0, 0]
         d_i, h_i, w_i = self._update(d_i, h_i, w_i, is_conv=False)
-        # self.kernel_size, self.c_stride = [1, 1, 1], [1, 1, 1]
-        # self.c_padding = [self._compute_pad(d_i, 0, is_conv=True), self._compute_pad(h_i, 1, is_conv=True), self._compute_pad(w_i, 2, is_conv=True)]
-        # d_i, h_i, w_i = self._update(d_i, h_i, w_i, is_conv=True)
-        self.first_in = d_i * h_i * w_i * 1024
+        self.kernel_size, self.c_stride = [1, 1, 1], [1, 1, 1]
+        self.c_padding = [self._compute_pad(d_i, 0, is_conv=True), self._compute_pad(h_i, 1, is_conv=True), self._compute_pad(w_i, 2, is_conv=True)]
+        d_i, h_i, w_i = self._update(d_i, h_i, w_i, is_conv=True)
+        if not self.spatial_squeeze:
+            self.first_in = d_i * h_i * w_i * 1024
+        else:
+            self.first_in = d_i * self.out_dim
         self.mlp = ASLModelMLP(self.first_in, self.hidden_dim, self.out_dim, self.n_lin_layers, self.lin_dropout, self.batch_norm)
 
     def forward(self, x):
-        out = self.i3d.extract_features(x)
+        out = self.i3d(x)
         out = out.view(-1, self.first_in)
         return self.mlp(out)
+
+
+def get_model(args, input_dim, output_dim):
+    if args.model == "mlp":
+        return ASLModelMLP(input_dim, args.hidden_dim, output_dim, n_lin_layers=args.n_lin_layers,
+                           lin_dropout=args.lin_dropout, batch_norm=args.batch_norm)
+    elif args.model == "3dcnn":
+        return ASLModel3DCNN(d_in=input_dim[1], h_in=input_dim[2], w_in=input_dim[3], n_cnn_layers=args.n_layers,
+                             in_channels=input_dim[0], out_channels=args.out_channels, kernel_size=args.kernel_size,
+                             pool_size=args.pool_size, pool_freq=args.pool_freq, n_lin_layers=args.n_lin_layers,
+                             hidden_dim=args.hidden_dim, out_dim=output_dim, c_stride=args.c_stride,
+                             c_padding=args.c_padding, c_dilation=args.c_dilation, c_groups=args.c_groups,
+                             p_stride=args.p_stride, p_padding=args.p_padding, p_dilation=args.p_dilation,
+                             dropout=args.dropout, lin_dropout=args.lin_dropout, batch_norm=args.batch_norm)
+    elif args.model == "i3d":
+        # model = InceptionI3d()
+        # model.load_state_dict(torch.load('data/weights/rgb_imagenet.pt'))
+        model = ASLModelI3D(d_in=input_dim[1], h_in=input_dim[2], w_in=input_dim[3], in_channels=input_dim[0],
+                            n_lin_layers=args.n_lin_layers, hidden_dim=args.hidden_dim, out_dim=output_dim,
+                            dropout=args.dropout, lin_dropout=args.lin_dropout, batch_norm=args.batch_norm)
+        return model
+    elif args.model == "lstm":
+        model = ASLModelLSTM
+    elif args.model == "gru":
+        model = ASLModelGRU
+    else:
+        raise ValueError("Invalid value for model, must be either \"mlp\", \"3dcnn\", \"lstm\" or \"gru\", got {}".format(args.model))
+    return model(input_dim, args.hidden_dim, args.n_layers, output_dim, batch_first=True,
+                 dropout=args.dropout, bidirectional=args.bidirectional,
+                 n_lin_layers=args.n_lin_layers, lin_dropout=args.lin_dropout,
+                 batch_norm=args.batch_norm)

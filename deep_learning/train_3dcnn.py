@@ -6,7 +6,8 @@ import numpy as np
 from torch.utils.tensorboard import SummaryWriter
 from utils.parser import get_parser
 import json
-from deep_learning.train import get_loss, get_model, get_lr_scheduler, get_lr_optimizer
+from deep_learning.train import get_loss, get_lr_scheduler, get_lr_optimizer
+from deep_learning.models import get_model
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import f1_score
 from tqdm import tqdm
@@ -106,6 +107,7 @@ def main():
         [
             torchvision.transforms.ToPILImage("RGB"),
             torchvision.transforms.Resize((256, 256)),
+            torchvision.transforms.CenterCrop(224),
             torchvision.transforms.ToTensor()
         ]
     )
