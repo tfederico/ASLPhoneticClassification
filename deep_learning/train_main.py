@@ -21,7 +21,7 @@ def main():
 
     sel_labels = ["MajorLocation"]
     transforms = None
-    if args.model == "i3d":
+    if args.model == "3dcnn":
         folder_name = "csvs"
         transforms = torchvision.transforms.Compose(
             [
@@ -49,7 +49,7 @@ def main():
         # print_stats(dataset)
 
 
-    if args.model == "i3d":
+    if args.model == "3dcnn":
         input_dim = dataset[0][0].numpy().shape
         classes, occurrences = dataset.get_num_occurrences()
         output_dim = len(classes)
@@ -78,7 +78,7 @@ def main():
     out_log = {}
     out_log["args"] = args.__dict__
 
-    if args.model == "i3d":
+    if args.model == "3dcnn":
         min_train_loss, max_train_f1_score, min_val_loss, max_val_f1_score = cnn_validation(args, dataset,
                                                                                             X_train, y_train,
                                                                                             weights, input_dim,

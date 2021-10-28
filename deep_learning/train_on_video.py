@@ -1,11 +1,5 @@
 import torch
-import torchvision
-import random
-import pickle
 import numpy as np
-from torch.utils.tensorboard import SummaryWriter
-from utils.parser import get_parser
-import json
 from deep_learning.train_kfold import get_loss, get_lr_scheduler, get_lr_optimizer
 from deep_learning.models import get_model
 from sklearn.model_selection import train_test_split
