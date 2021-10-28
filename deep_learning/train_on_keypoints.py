@@ -9,7 +9,7 @@ from deep_learning.train_kfold import train_n_epochs
 import pickle
 
 def perform_validation(args, X, y, weights, input_dim, output_dim, writer, log_dir):
-    X_train, X_val, y_train, y_val = train_test_split(X, y, test_size=0.15, random_state=args.seed, shuffle=True, stratify=y)
+    X_train, X_val, y_train, y_val = train_test_split(X, y, test_size=15/85, random_state=args.seed, shuffle=True, stratify=y)
 
     train_dataset = torch.utils.data.TensorDataset(torch.from_numpy(X_train),
                                                    torch.from_numpy(y_train))

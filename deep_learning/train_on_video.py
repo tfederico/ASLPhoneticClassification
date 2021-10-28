@@ -80,7 +80,7 @@ def train_n_epochs(args, dataset, train_ids, val_ids, weights, input_dim, output
 
 
 def perform_validation(args, dataset, ids, y, weights, input_dim, output_dim, writer, log_dir):
-    train_ids, val_ids, y_train, y_val = train_test_split(ids, y, test_size=0.15, random_state=args.seed, shuffle=True, stratify=y)
+    train_ids, val_ids, y_train, y_val = train_test_split(ids, y, test_size=15/85, random_state=args.seed, shuffle=True, stratify=y)
 
     train_loss_min, train_f1_max, valid_loss_min, valid_f1_max = train_n_epochs(args, dataset, train_ids, val_ids,
                                                                                 weights, input_dim, output_dim,
