@@ -124,7 +124,7 @@ def load_motions_parallel(motion_path, motion_file, drop_features):
     return df.to_numpy(), df.shape[0], motion_file.replace(".csv", "")
 
 class CompleteASLDataset(ASLDataset):
-    def __init__(self, motion_path, labels_path, sel_labels, drop_features=[], transform=None, different_length=False, map_file="WLASL_v0.3.json", debug=False, *args, **kwargs)):
+    def __init__(self, motion_path, labels_path, sel_labels, drop_features=[], transform=None, different_length=False, map_file="WLASL_v0.3.json", debug=False, *args, **kwargs):
         dir_path = path.dirname(path.realpath(__file__))
         self.map_file = path.join(dir_path, map_file)
         self.debug = debug or []
@@ -168,7 +168,7 @@ class CompleteASLDataset(ASLDataset):
         files = set(self.motions_keys).intersection(set(rev_gloss_id_dict.keys())) # remove from all ids the one who don't have an associated video
         labels = set(self.labels["EntryID"].values)
         files = set([rev_gloss_id_dict[v].lower() for v in files])
-        common = files.intersection(labels)
+        common = sorted(files.intersection(labels))
         file_list = [idx for gloss in common for idx in gloss_id_dict[gloss]]
         self.file_list = file_list
         self.gloss2file = gloss_id_dict
@@ -260,7 +260,7 @@ class CompleteVideoASLDataset(CompleteASLDataset):
         files = set(self.motions_keys).intersection(set(rev_gloss_id_dict.keys())) # remove from all ids the one who don't have an associated video
         labels = set(self.labels["EntryID"].values)
         files = set([rev_gloss_id_dict[v].lower() for v in files])
-        common = files.intersection(labels)
+        common = sorted(files.intersection(labels))
         all_good_ids = []
         for c in common:
             videos_ids = gloss_id_dict[c]
