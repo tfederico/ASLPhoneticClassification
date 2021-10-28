@@ -12,9 +12,11 @@ from tqdm import tqdm
 import pandas as pd
 import cv2
 
+from joblib import Parallel, delayed
 
 class ASLDataset(Dataset):
-    def __init__(self, motion_path, labels_path, sel_labels, drop_features=[], transform=None, different_length=False):
+    def __init__(self, motion_path, labels_path, sel_labels, drop_features=[], transform=None, different_length=False, do_preprocessing=True,
+                 relabel_map=None):
         dir_path = path.dirname(path.realpath(__file__))
         self.motion_path = path.join(dir_path, motion_path)
         self.labels_path = path.join(dir_path, labels_path)
@@ -31,6 +33,7 @@ class ASLDataset(Dataset):
         self._load_labels()
         self._load_motions()
         self._join_and_remove()
+        self.do_preprocessing = do_preprocessing
         self._preprocessing()
 
     def _expand_drop_features(self):
@@ -71,15 +74,27 @@ class ASLDataset(Dataset):
         self.labels.drop(drop_cols, axis="columns", inplace=True)
 
     def _preprocessing(self):
-        self.labels = LabelEncoder().fit_transform(self.labels.to_numpy())
-        if self.different_length:
-            new_motions = []
-            for i in range(len(self.motions)):
-                compensate = self.max_length - self.motions[i].shape[0]
-                pad_width = ((0, compensate), (0, 0)) if self.pad_end else ((compensate, 0), (0, 0))
-                new_motions.append(np.pad(self.motions[i], pad_width=pad_width, mode="constant", constant_values=0))
-            self.motions = np.array(new_motions)
-        self.motions = np.apply_along_axis(scale_in_range, 1, self.motions, -1, 1)
+        le = LabelEncoder()
+        old = self.labels.to_numpy()
+        labels = copy(old)
+        for ks, v in self.relabel_map.items():
+            for k in ks:
+                labels[old == k] = v
+
+        self.labels = le.fit_transform(labels)
+        self.label_to_id = dict(zip(le.classes_, le.transform(le.classes_)))
+        self.id_to_label = {v: k for k, v in self.label_to_id.items()}
+        
+        #self.labels = LabelEncoder().fit_transform(self.labels.to_numpy())
+        if self.do_preprocessing:
+            if self.different_length:
+                new_motions = []
+                for i in range(len(self.motions)):
+                    compensate = self.max_length - self.motions[i].shape[0]
+                    pad_width = ((0, compensate), (0, 0)) if self.pad_end else ((compensate, 0), (0, 0))
+                    new_motions.append(np.pad(self.motions[i], pad_width=pad_width, mode="constant", constant_values=0))
+                self.motions = np.array(new_motions)
+            self.motions = np.apply_along_axis(scale_in_range, 1, self.motions, -1, 1)
 
     def __len__(self):
         return len(self.labels)
@@ -102,21 +117,28 @@ def scale_in_range(X, a, b):
     X_max = X.max(axis=0)
     return (b-a) * (X - X_min)/(X_max - X_min) + a
 
+def load_motions_parallel(motion_path, motion_file, drop_features):
+    df = read_csv(os.path.join(motion_path, motion_file))
+    df.drop("frame", axis="columns", inplace=True)
+    df.drop(drop_features, axis="columns", inplace=True)
+    return df.to_numpy(), df.shape[0], motion_file.replace(".csv", "")
+
 class CompleteASLDataset(ASLDataset):
-    def __init__(self, motion_path, labels_path, sel_labels, drop_features=[], transform=None, different_length=False, map_file="WLASL_v0.3.json"):
+    def __init__(self, motion_path, labels_path, sel_labels, drop_features=[], transform=None, different_length=False, map_file="WLASL_v0.3.json", debug=False, *args, **kwargs)):
         dir_path = path.dirname(path.realpath(__file__))
         self.map_file = path.join(dir_path, map_file)
+        self.debug = debug or []
         super().__init__(motion_path, labels_path, sel_labels, drop_features, transform, different_length)
 
     def _load_motions(self):
         motion_files = sorted(listdir(self.motion_path))
-        for motion_file in tqdm(motion_files):
-            df = read_csv(join(self.motion_path, motion_file))
-            df.drop("frame", axis="columns", inplace=True)
-            df.drop(self.drop_features, axis="columns", inplace=True)
-            self.motions.append(df.to_numpy())
-            self.max_length = max(self.max_length, df.shape[0])
-            self.motions_keys.append(motion_file.replace(".csv", ""))
+        if self.debug:
+            motion_files = [f"{x}.csv" for x in self.debug]
+        res = Parallel(n_jobs=11)(delayed(load_motions_parallel)(self.motion_path, m, self.drop_features) for m in tqdm(motion_files))
+        for motion_df, max_len, motion_key in res:
+            self.motions.append(motion_df)
+            self.max_length = max(self.max_length, max_len)
+            self.motions_keys.append(motion_key)
         self.motions_keys = np.array(self.motions_keys)
         self.motions = np.array(self.motions)
         assert len(self.motions_keys) == len(np.unique(self.motions_keys)), "Some motion files are not unique {}".format(
@@ -147,6 +169,10 @@ class CompleteASLDataset(ASLDataset):
         labels = set(self.labels["EntryID"].values)
         files = set([rev_gloss_id_dict[v].lower() for v in files])
         common = files.intersection(labels)
+        file_list = [idx for gloss in common for idx in gloss_id_dict[gloss]]
+        self.file_list = file_list
+        self.gloss2file = gloss_id_dict
+        self.file2gloss = rev_gloss_id_dict
         all_good_ids = []
         for c in common:
             videos_ids = gloss_id_dict[c]
@@ -173,6 +199,27 @@ class CompleteASLDataset(ASLDataset):
         ldf.loc[ldf['EntryID'] == "icecream", ['EntryID']] = "ice cream"
         self.labels = ldf
 
+
+def load_npy_motions_parallel(motion_path, motion_file):
+    skel = np.load(os.path.join(motion_path, motion_file))
+    return skel, skel.shape[0], motion_file.replace(".mp4.npy", "")
+
+
+class HRNetASLDataset(CompleteASLDataset):
+    def _load_motions(self):
+        motion_files = sorted(listdir(self.motion_path))
+        if self.debug:
+            motion_files = [f"{x}.npy" for x in self.debug]
+        # res = Parallel(n_jobs=11)(delayed(load_npy_motions_parallel)(self.motion_path, m) for m in tqdm(motion_files))
+        res = [load_npy_motions_parallel(self.motion_path, m) for m in tqdm(motion_files)]
+        for skel, max_len, motion_key in res:
+            self.motions.append(skel)
+            self.max_length = max(self.max_length, max_len)
+            self.motions_keys.append(motion_key)
+        self.motions_keys = np.array(self.motions_keys)
+        self.motions = np.array(self.motions)
+        assert len(self.motions_keys) == len(np.unique(self.motions_keys)), "Some motion files are not unique {}".format(
+            self.motions_keys[np.unique(self.motions_keys, return_inverse=True, return_counts=True)[1] > 1])
 
 class CompleteVideoASLDataset(CompleteASLDataset):
     def __init__(self, motion_path, labels_path, sel_labels, drop_features=[], transform=None, different_length=False, map_file="WLASL_v0.3.json"):
