@@ -8,7 +8,8 @@ from sklearn.metrics import f1_score
 from sklearn.metrics import confusion_matrix
 from torch.utils.data import DataLoader
 import json
-from deep_learning.train import get_loss, get_model, run_once, seed_worker, get_lr_optimizer, get_lr_scheduler
+from deep_learning.train_kfold import get_loss, run_once, seed_worker, get_lr_optimizer, get_lr_scheduler
+from deep_learning.models import get_model
 from dotmap import DotMap
 from tqdm import tqdm
 

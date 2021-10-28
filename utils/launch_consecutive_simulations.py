@@ -102,7 +102,6 @@ param_grid_mlp = dict(
     momentum=[0.0],
     step_size=[200],
     gamma=[0.1],
-    interpolated=[False],
     batch_norm=[True],
     seed=[13]
 )
@@ -124,20 +123,38 @@ param_grid_lstm = dict(
     momentum=[0.0],
     step_size=[200],
     gamma=[0.1],
-    interpolated=[False],
     batch_norm=[True],
+    seed=[13]
+)
+
+param_grid_i3d = dict(
+    model=["i3d"],
+    n_lin_layers=[2, 3, 4],
+    hidden_dim=[256, 512, 1024],
+    dropout=[0.25, 0.5],
+    lin_dropout=[0.25, 0.5],
+    epochs=[50],
+    batch_size=[2],
+    weighted_loss=[False],
+    optimizer=["adam", "sgd"],
+    lr=[1e-2, 1e-3, 1e-4],
+    momentum=[0.0],
+    step_size=[200],
+    gamma=[0.1],
+    batch_norm=[True, False],
     seed=[13]
 )
 
 mlp_grid = list(ParameterGrid(param_grid_mlp))
 lstm_grid = list(ParameterGrid(param_grid_lstm))
+i3d_grid = list(ParameterGrid(param_grid_i3d))
 
 # remove if n_layers <= 1 and dropout != 0.
 lstm_grid = [elem for elem in lstm_grid if elem["n_layers"] > 1 or elem["dropout"] == 0.]
 # remove if n_lin_layers <= 1 and dropout != 0.
 lstm_grid = [elem for elem in lstm_grid if elem["n_lin_layers"] > 1 or elem["lin_dropout"] == 0.]
 
-grid = mlp_grid + lstm_grid
+grid = mlp_grid + lstm_grid + i3d_grid
 
 
 

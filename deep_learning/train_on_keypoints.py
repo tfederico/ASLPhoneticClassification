@@ -5,7 +5,7 @@ from sklearn.model_selection import train_test_split
 from torch.utils.tensorboard import SummaryWriter
 from utils.parser import get_parser
 import json
-from deep_learning.train import train_n_epochs
+from deep_learning.train_kfold import train_n_epochs
 import pickle
 
 def perform_validation(args, X, y, weights, input_dim, output_dim, writer, log_dir):
