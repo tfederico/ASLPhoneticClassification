@@ -16,12 +16,13 @@ from joblib import Parallel, delayed
 
 class ASLDataset(Dataset):
     def __init__(self, motion_path, labels_path, sel_labels, drop_features=[], transform=None, different_length=False, do_preprocessing=True,
-                 relabel_map=None):
+                 relabel_map={}):
         dir_path = path.dirname(path.realpath(__file__))
         self.motion_path = path.join(dir_path, motion_path)
         self.labels_path = path.join(dir_path, labels_path)
         self.transform = transform
         self.different_length = different_length
+        self.relabel_map = relabel_map
         self.pad_end = False
         self.max_length = -1
         self.motions = []
@@ -37,10 +38,11 @@ class ASLDataset(Dataset):
         self._preprocessing()
 
     def _expand_drop_features(self):
-        features_lr = ["Heel", "Knee", "Hip", "Eye", "Ear", "Toe", "Pinkie", "Ankle", "Elbow", "Shoulder", "Wrist"]
-        # features_center = ["Neck", "Nose", "Hip.Center", "Head"]
-        self.drop_features = [f + s for f in self.drop_features for s in [".L", ".R"] if f in features_lr]
-        self.drop_features = [f + a for f in self.drop_features for a in ["_x", "_y", "_z"]]
+        # features_lr = ["Heel", "Knee", "Hip", "Eye", "Ear", "Toe", "Pinkie", "Ankle", "Elbow", "Shoulder", "Wrist"]
+        # # features_center = ["Neck", "Nose", "Hip.Center", "Head"]
+        # self.drop_features = [f + s for f in self.drop_features for s in [".L", ".R"] if f in features_lr]
+        # self.drop_features = [f + a for f in self.drop_features for a in ["_x", "_y", "_z"]]
+        pass
 
     def _load_labels(self):
         ldf = read_csv(self.labels_path)
@@ -76,7 +78,7 @@ class ASLDataset(Dataset):
     def _preprocessing(self):
         le = LabelEncoder()
         old = self.labels.to_numpy()
-        labels = copy(old)
+        labels = old.copy()
         for ks, v in self.relabel_map.items():
             for k in ks:
                 labels[old == k] = v
@@ -118,9 +120,9 @@ def scale_in_range(X, a, b):
     return (b-a) * (X - X_min)/(X_max - X_min) + a
 
 def load_motions_parallel(motion_path, motion_file, drop_features):
-    df = read_csv(os.path.join(motion_path, motion_file))
+    df = read_csv(path.join(motion_path, motion_file))
     df.drop("frame", axis="columns", inplace=True)
-    df.drop(drop_features, axis="columns", inplace=True)
+    df.drop(df.columns[drop_features], axis="columns", inplace=True)
     return df.to_numpy(), df.shape[0], motion_file.replace(".csv", "")
 
 class CompleteASLDataset(ASLDataset):
@@ -134,7 +136,8 @@ class CompleteASLDataset(ASLDataset):
         motion_files = sorted(listdir(self.motion_path))
         if self.debug:
             motion_files = [f"{x}.csv" for x in self.debug]
-        res = Parallel(n_jobs=11)(delayed(load_motions_parallel)(self.motion_path, m, self.drop_features) for m in tqdm(motion_files))
+        # res = Parallel(n_jobs=11)(delayed(load_motions_parallel)(self.motion_path, m, self.drop_features) for m in tqdm(motion_files))
+        res = [load_motions_parallel(self.motion_path, m, self.drop_features) for m in tqdm(motion_files)]
         for motion_df, max_len, motion_key in res:
             self.motions.append(motion_df)
             self.max_length = max(self.max_length, max_len)

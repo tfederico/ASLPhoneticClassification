@@ -19,3 +19,5 @@ ASL_phonetic_classification.egg-info
 __pycache__
 runs/
 /data/weights/
+*.yaml
+/wandb/
