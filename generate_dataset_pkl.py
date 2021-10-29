@@ -12,25 +12,30 @@ def main():
     torch.manual_seed(args.seed)
     np.random.seed(args.seed)
     random.seed(args.seed)
-    if args.interpolated:
-        folder_name = "interpolated_csvs"
-    else:
-        folder_name = "csvs"
 
-    sel_labels = ["MajorLocation"]
+    folder_name = "csvs"
+
+    body = list(range(31)) + list(range(37, 44)) + [47, 48]
+    base = 49
+    hand1 = [i + base for i in [2, 3, 6, 7, 10, 11, 14, 15, 18, 19]]
+    base = 49 + 21
+    hand2 = [i + base for i in [2, 3, 6, 7, 10, 11, 14, 15, 18, 19]]
+    drop_feature = body + hand1 + hand2
+
+    sel_labels = ["SignType"]
     dataset = CompleteASLDataset(folder_name, "reduced_SignData.csv",
-                         sel_labels=sel_labels, drop_features=["Heel", "Knee", "Hip", "Toe", "Pinkie", "Ankle"],
-                         different_length=not args.interpolated)
+                         sel_labels=sel_labels, drop_features=drop_feature,
+                         different_length=True)
 
     with open("data/pkls/{}_dataset.pkl".format("majloc" if ["MajorLocation"] == sel_labels else "signtype"), "wb") as fp:
-        pickle.dump(dataset, fp)
+        pickle.dump(dataset, fp, protocol=4)
 
     dataset = CompleteVideoASLDataset("WLASL2000", "reduced_SignData.csv", sel_labels=sel_labels,
                                       drop_features=[],
-                                      different_length=not args.interpolated, transform=None)
+                                      different_length=True, transform=None)
 
     with open("data/pkls/{}_video_dataset.pkl".format("majloc" if ["MajorLocation"] == sel_labels else "signtype"), "wb") as fp:
-        pickle.dump(dataset, fp)
+        pickle.dump(dataset, fp, protocol=4)
 
 
 if __name__ == '__main__':

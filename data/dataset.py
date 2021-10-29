@@ -30,19 +30,11 @@ class ASLDataset(Dataset):
         self.labels = []
         self.sel_labels = [sel_labels] if not isinstance(sel_labels, list) else sel_labels
         self.drop_features = [drop_features] if not isinstance(drop_features, list) else drop_features
-        self._expand_drop_features()
         self._load_labels()
         self._load_motions()
         self._join_and_remove()
         self.do_preprocessing = do_preprocessing
         self._preprocessing()
-
-    def _expand_drop_features(self):
-        # features_lr = ["Heel", "Knee", "Hip", "Eye", "Ear", "Toe", "Pinkie", "Ankle", "Elbow", "Shoulder", "Wrist"]
-        # # features_center = ["Neck", "Nose", "Hip.Center", "Head"]
-        # self.drop_features = [f + s for f in self.drop_features for s in [".L", ".R"] if f in features_lr]
-        # self.drop_features = [f + a for f in self.drop_features for a in ["_x", "_y", "_z"]]
-        pass
 
     def _load_labels(self):
         ldf = read_csv(self.labels_path)
@@ -136,8 +128,8 @@ class CompleteASLDataset(ASLDataset):
         motion_files = sorted(listdir(self.motion_path))
         if self.debug:
             motion_files = [f"{x}.csv" for x in self.debug]
-        # res = Parallel(n_jobs=11)(delayed(load_motions_parallel)(self.motion_path, m, self.drop_features) for m in tqdm(motion_files))
-        res = [load_motions_parallel(self.motion_path, m, self.drop_features) for m in tqdm(motion_files)]
+        res = Parallel(n_jobs=7)(delayed(load_motions_parallel)(self.motion_path, m, self.drop_features) for m in tqdm(motion_files))
+        # res = [load_motions_parallel(self.motion_path, m, self.drop_features) for m in tqdm(motion_files)]
         for motion_df, max_len, motion_key in res:
             self.motions.append(motion_df)
             self.max_length = max(self.max_length, max_len)

@@ -15,7 +15,7 @@ def str2bool(v):
 def get_parser():
     parser = argparse.ArgumentParser(description="ASL-Lex feature recognition")
     parser.add_argument('--device', default="cuda:0", type=str, help='device id')
-    parser.add_argument('--model', default="mlp", type=str, help='memory unit', choices=['lstm', 'gru', "mlp", "3dcnn", "i3d"])
+    parser.add_argument('--model', default="mlp", type=str, help='memory unit', choices=['lstm', 'gru', "mlp", "3dcnn"])
     parser.add_argument('--n_layers', default=0, type=int, help='# layers lstm')
     parser.add_argument('--n_lin_layers', default=2, type=int, help='# linear layers')
     parser.add_argument('--hidden_dim', default=64, type=int, help='# hidden units in lstm')
@@ -33,7 +33,7 @@ def get_parser():
     parser.add_argument('--gamma', default=0.1, type=float, help='gamma for lr scheduler')
     parser.add_argument('--batch_norm', default=True, type=str2bool, choices=[True, False], help='using batch_normalisation')
     parser.add_argument('--seed', default=13, type=int, help="random seed for simulation")
-    parser.add_argument('--out_channels', type=lambda s: [int(item) for item in s.split(',')], help="List of output channels for 3D CNN")
+    parser.add_argument('--out_channels', default="3,6,9", type=lambda s: [int(item) for item in s.split(',')], help="List of output channels for 3D CNN")
     parser.add_argument('--kernel_size', default="3,3,3", type=lambda s: [int(item) for item in s.split(',')], help="Kernel size")
     parser.add_argument('--pool_size', default="3,3,3", type=lambda s: [int(item) for item in s.split(',')], help="MaxPool size")
     parser.add_argument('--pool_freq', default=1, type=int, help="MaxPool frequency (conv/pool layers ratio)")

@@ -1,12 +1,12 @@
 import torch
 import numpy as np
-from deep_learning.train_kfold import get_loss, get_lr_scheduler, get_lr_optimizer
-from deep_learning.models import get_model
+from deep_learning.utils import get_lr_optimizer, get_lr_scheduler, get_loss, get_model
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import f1_score
 from tqdm import tqdm
 import math
 from sklearn.utils import shuffle
+import wandb
 
 
 def run_once(args, model, dataset, ids, criterion, optimizer, is_train=False):
@@ -16,7 +16,7 @@ def run_once(args, model, dataset, ids, criterion, optimizer, is_train=False):
     num_batches = math.ceil(len(ids)/args.batch_size)
     ids_copy = ids.copy()
     if is_train:
-        ids_copy = shuffle(ids_copy, random_state=args.seed)
+        ids_copy = shuffle(ids_copy)
 
     torch.set_grad_enabled(is_train)
     for i in tqdm(range(num_batches), leave=False):
@@ -66,6 +66,16 @@ def train_n_epochs(args, dataset, train_ids, val_ids, weights, input_dim, output
             writer.add_scalar("F1{}/train".format(tag), train_f1_score, i)
             writer.add_scalar("Loss{}/val".format(tag), np.mean(val_losses), i)
             writer.add_scalar("F1{}/val".format(tag), val_f1_score, i)
+
+        wandb.log(
+            {
+                "train/loss": np.mean(train_losses),
+                "train/f1": train_f1_score,
+                "val/loss": np.mean(val_losses),
+                "val/f1": val_f1_score
+            }
+        )
+
         scheduler.step()
         model.train()
         if np.mean(val_losses) < valid_loss_min:

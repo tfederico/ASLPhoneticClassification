@@ -401,22 +401,3 @@ class ASLModelI3D(ASLModel):
         return self.mlp(out)
 
 
-def get_model(args, input_dim, output_dim):
-    if args.model == "mlp":
-        return ASLModelMLP(input_dim, args.hidden_dim, output_dim, n_lin_layers=args.n_lin_layers,
-                           lin_dropout=args.lin_dropout, batch_norm=args.batch_norm)
-    elif args.model == "3dcnn":
-        model = ASLModelI3D(d_in=input_dim[1], h_in=input_dim[2], w_in=input_dim[3], in_channels=input_dim[0],
-                            n_lin_layers=args.n_lin_layers, hidden_dim=args.hidden_dim, out_dim=output_dim,
-                            dropout=args.dropout, lin_dropout=args.lin_dropout, batch_norm=args.batch_norm)
-        return model
-    elif args.model == "lstm":
-        model = ASLModelLSTM
-    elif args.model == "gru":
-        model = ASLModelGRU
-    else:
-        raise ValueError("Invalid value for model, must be either \"mlp\", \"3dcnn\", \"lstm\" or \"gru\", got {}".format(args.model))
-    return model(input_dim, args.hidden_dim, args.n_layers, output_dim, batch_first=True,
-                 dropout=args.dropout, bidirectional=args.bidirectional,
-                 n_lin_layers=args.n_lin_layers, lin_dropout=args.lin_dropout,
-                 batch_norm=args.batch_norm)

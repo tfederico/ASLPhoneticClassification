@@ -1,24 +1,25 @@
 import torch
 import torchvision
-import random
 import pickle
 import numpy as np
 from torch.utils.tensorboard import SummaryWriter
+from deep_learning.utils import init_seed
 from utils.parser import get_parser
 import json
 from sklearn.model_selection import train_test_split
-from data.dataset import CompleteVideoASLDataset, CompleteASLDataset
 from deep_learning.train_on_keypoints import perform_validation as validation
 from deep_learning.train_on_video import perform_validation as cnn_validation
+import wandb
+import os
 
 
-def main():
-    parser = get_parser()
-    args = parser.parse_args()
-    torch.manual_seed(args.seed)
-    np.random.seed(args.seed)
-    random.seed(args.seed)
+def main(args):
 
+    wandb.init(project=os.environ.get('WANDB_PROJECT', ''), entity="mrroboto", config=args)
+    args = wandb.config
+    init_seed(args.seed)
+
+    drop_features = ["Heel", "Knee", "Hip", "Toe", "Pinkie", "Ankle"]
     sel_labels = ["MajorLocation"]
     transforms = None
     if args.model == "3dcnn":
@@ -32,7 +33,7 @@ def main():
             ]
         )
         # dataset = CompleteVideoASLDataset(folder_name, "reduced_SignData.csv", sel_labels=sel_labels,
-        #                                   drop_features=["Heel", "Knee", "Hip", "Toe", "Pinkie", "Ankle"],
+        #                                   drop_features=drop_features,
         #                                   different_length=not args.interpolated, transform=transforms)
         with open("data/pkls/{}_video_dataset.pkl".format(
                 "majloc" if ["MajorLocation"] == sel_labels else "signtype"), "rb") as fp:
@@ -41,7 +42,7 @@ def main():
     else:
         folder_name = "WLASL2000"
         # dataset = CompleteASLDataset(folder_name, "reduced_SignData.csv",
-        #                      sel_labels=sel_labels, drop_features=["Heel", "Knee", "Hip", "Toe", "Pinkie", "Ankle"],
+        #                      sel_labels=sel_labels, drop_features=drop_features,
         #                      different_length=not args.interpolated)
         with open("data/pkls/{}_dataset.pkl".format("majloc" if ["MajorLocation"] == sel_labels else "signtype"), "rb") as fp:
                 dataset = pickle.load(fp)
@@ -73,10 +74,9 @@ def main():
     else:
         weights = None
 
-    writer = SummaryWriter()
+    writer = None
     log_dir = writer.log_dir
-    out_log = {}
-    out_log["args"] = args.__dict__
+    out_log = {"args": args.__dict__}
 
     if args.model == "3dcnn":
         min_train_loss, max_train_f1_score, min_val_loss, max_val_f1_score = cnn_validation(args, dataset,
@@ -92,10 +92,16 @@ def main():
                                                                                         log_dir)
 
 
-    out_log["min_train_loss"] = min_train_loss
-    out_log["max_train_f1_score"] = max_train_f1_score
-    out_log["min_val_loss"] = min_val_loss
-    out_log["max_val_f1_score"] = max_val_f1_score
+    # out_log["min_train_loss"] = min_train_loss
+    # out_log["max_train_f1_score"] = max_train_f1_score
+    # out_log["min_val_loss"] = min_val_loss
+    # out_log["max_val_f1_score"] = max_val_f1_score
+    #
+    # with open("{}/log_file.json".format(log_dir), "w") as fp:
+    #     json.dump(out_log, fp)
 
-    with open("{}/log_file.json".format(log_dir), "w") as fp:
-        json.dump(out_log, fp)
+
+if __name__ == "__main__":
+    parser = get_parser()
+    args = parser.parse_args()
+    main(args)
