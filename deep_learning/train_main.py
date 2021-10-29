@@ -75,7 +75,7 @@ def main(args):
         weights = None
 
     writer = None
-    log_dir = writer.log_dir
+    log_dir = writer.log_dir if writer else ""
     out_log = {"args": args.__dict__}
 
     if args.model == "3dcnn":
