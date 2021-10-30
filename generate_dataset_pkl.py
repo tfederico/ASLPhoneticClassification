@@ -20,11 +20,11 @@ def main():
     hand1 = [i + base for i in [2, 3, 6, 7, 10, 11, 14, 15, 18, 19]]
     base = 49 + 21
     hand2 = [i + base for i in [2, 3, 6, 7, 10, 11, 14, 15, 18, 19]]
-    drop_feature = body + hand1 + hand2
+    drop_features = body + hand1 + hand2
 
     sel_labels = ["SignType"]
     dataset = CompleteASLDataset(folder_name, "reduced_SignData.csv",
-                         sel_labels=sel_labels, drop_features=drop_feature,
+                         sel_labels=sel_labels, drop_features=drop_features,
                          different_length=True)
 
     with open("data/pkls/{}_dataset.pkl".format("majloc" if ["MajorLocation"] == sel_labels else "signtype"), "wb") as fp:

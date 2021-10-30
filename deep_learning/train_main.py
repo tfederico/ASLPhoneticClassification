@@ -19,7 +19,12 @@ def main(args):
     args = wandb.config
     init_seed(args.seed)
 
-    drop_features = ["Heel", "Knee", "Hip", "Toe", "Pinkie", "Ankle"]
+    body = list(range(31)) + list(range(37, 44)) + [47, 48]
+    base = 49
+    hand1 = [i + base for i in [2, 3, 6, 7, 10, 11, 14, 15, 18, 19]]
+    base = 49 + 21
+    hand2 = [i + base for i in [2, 3, 6, 7, 10, 11, 14, 15, 18, 19]]
+    drop_features = body + hand1 + hand2
     sel_labels = ["MajorLocation"]
     transforms = None
     if args.model == "3dcnn":
