@@ -57,14 +57,14 @@ def train_n_epochs(args, train_dataset, val_dataset, weights, input_dim, output_
             writer.add_scalar("Loss{}/val".format(tag), np.mean(val_losses), i)
             writer.add_scalar("F1{}/val".format(tag), val_f1_score, i)
 
-        wandb.log(
-            {
+
+        wdb_log = {
                 "train/loss": np.mean(train_losses).item(),
                 "train/f1": train_f1_score,
                 "val/loss": np.mean(val_losses).item(),
                 "val/f1": val_f1_score
-            }
-        )
+        }
+        wandb.log(wdb_log, step=i)
 
         scheduler.step()
         model.train()
