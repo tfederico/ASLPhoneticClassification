@@ -59,9 +59,9 @@ def train_n_epochs(args, train_dataset, val_dataset, weights, input_dim, output_
 
         wdb_log = {
                 "train_loss": np.mean(train_losses).item(),
-                "train_f1": train_f1_score,
+                "train_f1": train_f1_score.item(),
                 "val_loss": np.mean(val_losses).item(),
-                "val_f1": val_f1_score
+                "val_f1": val_f1_score.item()
         }
         wandb.log(wdb_log, step=i)
 

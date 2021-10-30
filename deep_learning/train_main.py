@@ -28,7 +28,7 @@ def main(args):
     sel_labels = ["MajorLocation"]
     transforms = None
     if args.model == "3dcnn":
-        folder_name = "csvs"
+        folder_name = "WLASL2000"
         transforms = torchvision.transforms.Compose(
             [
                 torchvision.transforms.ToPILImage("RGB"),
@@ -45,7 +45,7 @@ def main(args):
             dataset = pickle.load(fp)
             dataset.set_transforms(transforms)
     else:
-        folder_name = "WLASL2000"
+        folder_name = "csvs"
         # dataset = CompleteASLDataset(folder_name, "reduced_SignData.csv",
         #                      sel_labels=sel_labels, drop_features=drop_features,
         #                      different_length=not args.interpolated)
