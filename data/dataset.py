@@ -113,12 +113,14 @@ def scale_in_range(X, a, b):
 
 def load_motions_parallel(motion_path, motion_file, drop_features):
     df = read_csv(path.join(motion_path, motion_file))
+    df.fillna(0, axis="columns", inplace=True)
     df.drop("frame", axis="columns", inplace=True)
     df.drop(df.columns[drop_features], axis="columns", inplace=True)
     return df.to_numpy(), df.shape[0], motion_file.replace(".csv", "")
 
 class CompleteASLDataset(ASLDataset):
-    def __init__(self, motion_path, labels_path, sel_labels, drop_features=[], transform=None, different_length=False, map_file="WLASL_v0.3.json", debug=False, *args, **kwargs):
+    def __init__(self, motion_path, labels_path, sel_labels, drop_features=[], transform=None, different_length=False, 
+                 map_file="WLASL_v0.3.json", debug=False, *args, **kwargs):
         dir_path = path.dirname(path.realpath(__file__))
         self.map_file = path.join(dir_path, map_file)
         self.debug = debug or []
