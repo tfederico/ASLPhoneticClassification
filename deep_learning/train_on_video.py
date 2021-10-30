@@ -69,9 +69,9 @@ def train_n_epochs(args, dataset, train_ids, val_ids, weights, input_dim, output
 
         wandb.log(
             {
-                "train/loss": np.mean(train_losses),
+                "train/loss": np.mean(train_losses).item(),
                 "train/f1": train_f1_score,
-                "val/loss": np.mean(val_losses),
+                "val/loss": np.mean(val_losses).item(),
                 "val/f1": val_f1_score
             }
         )
