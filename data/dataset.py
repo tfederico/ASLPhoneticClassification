@@ -115,7 +115,7 @@ def load_motions_parallel(motion_path, motion_file, drop_features):
     df = read_csv(path.join(motion_path, motion_file))
     df.drop("frame", axis="columns", inplace=True)
     df.drop(df.columns[drop_features], axis="columns", inplace=True)
-    df.fillna(0, inplace=True)
+    df.fillna(-2, inplace=True)
     return df.to_numpy(), df.shape[0], motion_file.replace(".csv", "")
 
 class CompleteASLDataset(ASLDataset):

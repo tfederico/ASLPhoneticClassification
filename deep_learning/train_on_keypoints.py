@@ -1,7 +1,7 @@
 import torch
 import numpy as np
 import wandb
-from sklearn.metrics import f1_score
+from sklearn.metrics import f1_score, accuracy_score, balanced_accuracy_score, matthews_corrcoef
 from sklearn.model_selection import train_test_split
 from torch.utils.data import DataLoader
 from tqdm import tqdm
@@ -58,10 +58,18 @@ def train_n_epochs(args, train_dataset, val_dataset, weights, input_dim, output_
             writer.add_scalar("F1{}/val".format(tag), val_f1_score, i)
 
         wdb_log = {
-                "train/train_loss": np.mean(train_losses).item(),
-                "train/train_f1": train_f1_score.item(),
-                "val/val_loss": np.mean(val_losses).item(),
-                "val/val_f1": val_f1_score.item()
+            "train/loss": np.mean(train_losses),
+            "train/micro_f1": train_f1_score,
+            "train/macro_f1": f1_score(train_gt, train_outs, average="macro"),
+            "train/accuracy": accuracy_score(train_gt, train_outs),
+            "train/balanced_accuracy": balanced_accuracy_score(train_gt, train_outs),
+            "train/mcc": matthews_corrcoef(train_gt, train_outs),
+            "val/loss": np.mean(val_losses),
+            "val/micro_f1": val_f1_score,
+            "val/macro_f1": f1_score(val_gt, val_outs, average="macro"),
+            "val/accuracy": accuracy_score(val_gt, val_outs),
+            "val/balanced_accuracy": balanced_accuracy_score(val_gt, val_outs),
+            "val/mcc": matthews_corrcoef(val_gt, val_outs)
         }
         wandb.log(wdb_log, step=i)
 

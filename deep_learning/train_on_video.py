@@ -2,7 +2,7 @@ import torch
 import numpy as np
 from deep_learning.utils import get_lr_optimizer, get_lr_scheduler, get_loss, get_model
 from sklearn.model_selection import train_test_split
-from sklearn.metrics import f1_score
+from sklearn.metrics import f1_score, accuracy_score, balanced_accuracy_score, matthews_corrcoef
 from tqdm import tqdm
 import math
 from sklearn.utils import shuffle
@@ -67,14 +67,20 @@ def train_n_epochs(args, dataset, train_ids, val_ids, weights, input_dim, output
             writer.add_scalar("Loss{}/val".format(tag), np.mean(val_losses), i)
             writer.add_scalar("F1{}/val".format(tag), val_f1_score, i)
 
-        wandb.log(
-            {
-                "train/loss": np.mean(train_losses).item(),
-                "train/f1": train_f1_score,
-                "val/loss": np.mean(val_losses).item(),
-                "val/f1": val_f1_score
-            }
-        )
+        wdb_log = {
+            "train/loss": np.mean(train_losses),
+            "train/micro_f1": train_f1_score,
+            "train/macro_f1": f1_score(train_gt, train_outs, average="macro"),
+            "train/accuracy": accuracy_score(train_gt, train_outs),
+            "train/balanced_accuracy": balanced_accuracy_score(train_gt, train_outs),
+            "train/mcc": matthews_corrcoef(train_gt, train_outs),
+            "val/loss": np.mean(val_losses),
+            "val/micro_f1": val_f1_score,
+            "val/macro_f1": f1_score(val_gt, val_outs, average="macro"),
+            "val/accuracy": accuracy_score(val_gt, val_outs),
+            "val/balanced_accuracy": balanced_accuracy_score(val_gt, val_outs),
+            "val/mcc": matthews_corrcoef(val_gt, val_outs)
+        }
 
         scheduler.step()
         model.train()

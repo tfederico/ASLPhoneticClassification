@@ -54,7 +54,6 @@ def main(args):
 
         # print_stats(dataset)
 
-
     if args.model == "3dcnn":
         input_dim = dataset[0][0].numpy().shape
         classes, occurrences = dataset.get_num_occurrences()
