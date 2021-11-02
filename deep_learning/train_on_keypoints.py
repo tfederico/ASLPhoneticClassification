@@ -86,8 +86,7 @@ def train_n_epochs(args, train_dataset, val_dataset, weights, input_dim, output_
     return train_loss_min, train_f1_max, valid_loss_min, valid_f1_max
 
 
-def perform_validation(args, X, y, weights, input_dim, output_dim, writer, log_dir):
-    X_train, X_val, y_train, y_val = train_test_split(X, y, test_size=15/85, random_state=args.seed, shuffle=True, stratify=y)
+def perform_validation(args, X_train, y_train, X_val, y_val, weights, input_dim, output_dim, writer, log_dir):
 
     train_dataset = torch.utils.data.TensorDataset(torch.from_numpy(X_train),
                                                    torch.from_numpy(y_train))

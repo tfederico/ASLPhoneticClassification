@@ -197,27 +197,6 @@ class CompleteASLDataset(ASLDataset):
         self.labels = ldf
 
 
-def load_npy_motions_parallel(motion_path, motion_file):
-    skel = np.load(os.path.join(motion_path, motion_file))
-    return skel, skel.shape[0], motion_file.replace(".mp4.npy", "")
-
-
-class HRNetASLDataset(CompleteASLDataset):
-    def _load_motions(self):
-        motion_files = sorted(listdir(self.motion_path))
-        if self.debug:
-            motion_files = [f"{x}.npy" for x in self.debug]
-        # res = Parallel(n_jobs=11)(delayed(load_npy_motions_parallel)(self.motion_path, m) for m in tqdm(motion_files))
-        res = [load_npy_motions_parallel(self.motion_path, m) for m in tqdm(motion_files)]
-        for skel, max_len, motion_key in res:
-            self.motions.append(skel)
-            self.max_length = max(self.max_length, max_len)
-            self.motions_keys.append(motion_key)
-        self.motions_keys = np.array(self.motions_keys)
-        self.motions = np.array(self.motions)
-        assert len(self.motions_keys) == len(np.unique(self.motions_keys)), "Some motion files are not unique {}".format(
-            self.motions_keys[np.unique(self.motions_keys, return_inverse=True, return_counts=True)[1] > 1])
-
 class CompleteVideoASLDataset(CompleteASLDataset):
     def __init__(self, motion_path, labels_path, sel_labels, drop_features=[], transform=None, different_length=False, map_file="WLASL_v0.3.json"):
         self.n_output_classes = -1
@@ -337,3 +316,25 @@ class CompleteVideoASLDataset(CompleteASLDataset):
 
     def set_transforms(self, transforms):
         self.transform = transforms
+
+
+def load_npy_motions_parallel(motion_path, motion_file):
+    skel = np.load(os.path.join(motion_path, motion_file))
+    return skel, skel.shape[0], motion_file.replace(".mp4.npy", "")
+
+
+class HRNetASLDataset(CompleteASLDataset):
+    def _load_motions(self):
+        motion_files = sorted(listdir(self.motion_path))
+        if self.debug:
+            motion_files = [f"{x}.npy" for x in self.debug]
+        # res = Parallel(n_jobs=11)(delayed(load_npy_motions_parallel)(self.motion_path, m) for m in tqdm(motion_files))
+        res = [load_npy_motions_parallel(self.motion_path, m) for m in tqdm(motion_files)]
+        for skel, max_len, motion_key in res:
+            self.motions.append(skel)
+            self.max_length = max(self.max_length, max_len)
+            self.motions_keys.append(motion_key)
+        self.motions_keys = np.array(self.motions_keys)
+        self.motions = np.array(self.motions)
+        assert len(self.motions_keys) == len(np.unique(self.motions_keys)), "Some motion files are not unique {}".format(
+            self.motions_keys[np.unique(self.motions_keys, return_inverse=True, return_counts=True)[1] > 1])

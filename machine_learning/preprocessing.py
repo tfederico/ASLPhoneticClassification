@@ -79,10 +79,16 @@ def preprocess_dataset(labels, drop_feat_lr, drop_feat_center, different_length 
     ## with ".L"/".R"
     # Heel, Knee, Hip, Wrist, Elbow, Shoulder, Eye, Ear, Toe, Pinkie, Ankle
     ## all of them have "_x", "_y", "_z"
-    drop_features = drop_feat_lr
-    drop_features = [f+s for f in drop_features for s in [".L", ".R"]]
-    drop_features += drop_feat_center
-    drop_features = [f+a for f in drop_features for a in ["_x", "_y", "_z"]]
+    # drop_features = drop_feat_lr
+    # drop_features = [f+s for f in drop_features for s in [".L", ".R"]]
+    # drop_features += drop_feat_center
+    # drop_features = [f+a for f in drop_features for a in ["_x", "_y", "_z"]]
+    body = list(range(31)) + list(range(37, 44)) + [47, 48]
+    base = 49
+    hand1 = [i + base for i in [2, 3, 6, 7, 10, 11, 14, 15, 18, 19]]
+    base = 49 + 21
+    hand2 = [i + base for i in [2, 3, 6, 7, 10, 11, 14, 15, 18, 19]]
+    drop_features = body + hand1 + hand2
     dataset = CompleteASLDataset("interpolated_csvs" if not different_length else "csvs",
                             "reduced_SignData.csv", sel_labels=labels, drop_features=drop_features, different_length=different_length)
     X = dataset[:][0] # shape (n_clip, n_frames, n_joints)

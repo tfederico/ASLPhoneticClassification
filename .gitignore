@@ -6,7 +6,7 @@ machine_learning/valid_results
 data/reduced_SignData.csv
 data/csvs
 data/small_csvs
-data/pkls/*.pkl
+data/pkls/
 data/*WLASL2000
 data/*.mp4
 data/interpolated_csvs
@@ -18,6 +18,8 @@ ASL_phonetic_classification.egg-info
 .idea
 __pycache__
 runs/
-/data/weights/
+data/weights/
 *.yaml
-/wandb/
+wandb/
+data/npys/
+/data/npy/

@@ -11,9 +11,28 @@ from deep_learning.train_on_keypoints import perform_validation as validation
 from deep_learning.train_on_video import perform_validation as cnn_validation
 import wandb
 import os
+from data.dataset import CompleteASLDataset, HRNetASLDataset
+
+
+def viktor_to_human(X):
+    X = np.transpose(X, (0, 2, 1, 3))
+    X = X.reshape((X.shape[0], X.shape[1], -1))
+    return X
+
+
+def load_npy_and_pkl(labels, annotator, split):
+    assert split in ["train", "val", "test"]
+    assert annotator in ["27-frank-frank", "27_2-hrt"]
+    X = np.load("data/npy/{}/{}/{}_data_joint_frank.npy".format(labels.lower(), annotator, split)).squeeze()
+    X = viktor_to_human(X)
+    with open("data/npy/{}/{}/{}_label_frank.pkl".format(labels.lower(), annotator, split), "rb") as fp:
+        y = np.array(pickle.load(fp)[1])
+    return X, y
 
 
 def main(args):
+
+    source = "npy"
 
     wandb.init(project=os.environ.get('WANDB_PROJECT', ''), entity="mrroboto", config=args)
     args = wandb.config
@@ -37,22 +56,35 @@ def main(args):
                 torchvision.transforms.ToTensor()
             ]
         )
-        # dataset = CompleteVideoASLDataset(folder_name, "reduced_SignData.csv", sel_labels=sel_labels,
-        #                                   drop_features=drop_features,
-        #                                   different_length=not args.interpolated, transform=transforms)
-        with open("data/pkls/{}_video_dataset.pkl".format(
-                "majloc" if ["MajorLocation"] == sel_labels else "signtype"), "rb") as fp:
-            dataset = pickle.load(fp)
-            dataset.set_transforms(transforms)
+        if source == "load":
+            dataset = CompleteVideoASLDataset(folder_name, "reduced_SignData.csv", sel_labels=sel_labels,
+                                              drop_features=drop_features,
+                                              different_length=True, transform=transforms)
+        elif source == "pkl":
+            with open("data/pkls/{}_video_dataset.pkl".format(sel_labels[0].lower()), "rb") as fp:
+                dataset = pickle.load(fp)
+                dataset.set_transforms(transforms)
+        else:
+            raise ValueError("npy loading not implemented")
     else:
         folder_name = "csvs"
-        # dataset = CompleteASLDataset(folder_name, "reduced_SignData.csv",
-        #                      sel_labels=sel_labels, drop_features=drop_features,
-        #                      different_length=not args.interpolated)
-        with open("data/pkls/{}_dataset.pkl".format("majloc" if ["MajorLocation"] == sel_labels else "signtype"), "rb") as fp:
+        if source == "load":
+            dataset = CompleteASLDataset(folder_name, "reduced_SignData.csv",
+                                 sel_labels=sel_labels, drop_features=drop_features,
+                                 different_length=True)
+            X, y = dataset[:][0], dataset[:][1]
+        elif source == "pkl":
+            with open("data/pkls/{}_dataset.pkl".format(sel_labels[0].lower()), "rb") as fp:
                 dataset = pickle.load(fp)
+            X, y = dataset[:][0], dataset[:][1]
+        else:
+            X_train, y_train = load_npy_and_pkl(sel_labels[0], "27-frank-frank", "train")
+            X_val, y_val = load_npy_and_pkl(sel_labels[0], "27-frank-frank", "val")
+            X_test, y_test = load_npy_and_pkl(sel_labels[0], "27-frank-frank", "test")
+            X = np.concatenate([X_train, X_val, X_test])
+            y = np.concatenate([y_train, y_val, y_test])
+            dataset = list(zip(X, y))
 
-        # print_stats(dataset)
 
     if args.model == "3dcnn":
         input_dim = dataset[0][0].numpy().shape
@@ -61,16 +93,18 @@ def main(args):
         X = list(range(len(dataset)))
         y = dataset.get_labels()
     else:
-        X, y = dataset[:][0], dataset[:][1]
         output_dim = len(np.unique(y))
         if args.model != "mlp":
             input_dim = X[0].shape[1]
         else:
             input_dim = X[0].shape[0] * X[0].shape[1]
 
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.15, random_state=args.seed,
-                                                        shuffle=True,
-                                                        stratify=y)
+    if source != "npy":
+        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.15, random_state=args.seed,
+                                                            shuffle=True)
+        X_train, X_val, y_train, y_val = train_test_split(X_train, y_train, test_size=15 / 85, random_state=args.seed,
+                                                          shuffle=True)
+
 
     if args.weighted_loss:
         classes, occurrences = np.unique(y, return_counts=True)
@@ -84,13 +118,14 @@ def main(args):
 
     if args.model == "3dcnn":
         min_train_loss, max_train_f1_score, min_val_loss, max_val_f1_score = cnn_validation(args, dataset,
-                                                                                            X_train, y_train,
+                                                                                            X_train, X_val,
                                                                                             weights, input_dim,
                                                                                             output_dim, writer,
                                                                                             log_dir)
 
     else:
         min_train_loss, max_train_f1_score, min_val_loss, max_val_f1_score = validation(args, X_train, y_train,
+                                                                                        X_val, y_val,
                                                                                         weights, input_dim,
                                                                                         output_dim, writer,
                                                                                         log_dir)
