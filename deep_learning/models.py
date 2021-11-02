@@ -247,6 +247,7 @@ class ASLModel3DCNN(ASLModel):
         self.mlp = ASLModelMLP(self.first_in, self.hidden_dim, self.out_dim, self.n_lin_layers, self.lin_dropout, self.batch_norm)
 
     def forward(self, x):
+        assert (self.batch_norm == False) or x.shape[0] > 1, "Batch norm requires batch size > 1"
         out = self.cnn(x)
         return self.mlp(out.reshape((-1, self.first_in)))
 

@@ -253,13 +253,25 @@ class CompleteVideoASLDataset(CompleteASLDataset):
         self.labels = LabelEncoder().fit_transform(self.labels.to_numpy())
 
     def _pad_sequence(self, sequence):
+        max_length = self.get_max_length()
         diff = self.max_length - len(sequence)
-        if diff == 0:
-            return sequence
+        if diff <= 0:
+            return sequence[:max_length]
         else:
-            pad_dim = (diff,) + sequence.shape[1:]
-            pad = torch.zeros(pad_dim)
-            seq = torch.cat((sequence, pad))
+            zero_padding = False
+            if zero_padding:
+                pad_dim = (diff,) + sequence.shape[1:]
+                pad = torch.zeros(pad_dim)
+                seq = torch.cat((sequence, pad))
+            else:
+                div_int = diff // len(sequence)
+                div_rem = diff % len(sequence)
+                seq = torch.Tensor()
+                for i in range(div_int):
+                    seq = torch.cat((seq, sequence))
+                seq = torch.cat((sequence, seq))
+                seq = torch.cat((seq, sequence[:div_rem]))
+
             return seq
 
     def __getitem__(self, idx):
@@ -289,18 +301,18 @@ class CompleteVideoASLDataset(CompleteASLDataset):
             data = torch.stack(data)
             data = data.permute(0, 2, 1, 3, 4)
         else:
-            cap = cv2.VideoCapture(join(self.motion_path, motion_key+".mp4"))
-            motion = []
+            cap = cv2.VideoCapture(join(self.motion_path, motion_key + ".mp4"))
+            motion = torch.Tensor()
             while cap.isOpened():
                 ret, frame = cap.read()
                 if not (frame is None):
                     if self.transform:
                         frame = self.transform(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
-                    motion.append(frame)
+                    motion = torch.cat((motion, frame.unsqueeze(dim=0)))
                 else:
                     break
             cap.release()
-            data = self._pad_sequence(torch.stack(motion))
+            data = self._pad_sequence(motion)
             data = data.permute(1, 0, 2, 3)
         sample = data, torch.from_numpy(labels)
         return sample
@@ -338,3 +350,45 @@ class HRNetASLDataset(CompleteASLDataset):
         self.motions = np.array(self.motions)
         assert len(self.motions_keys) == len(np.unique(self.motions_keys)), "Some motion files are not unique {}".format(
             self.motions_keys[np.unique(self.motions_keys, return_inverse=True, return_counts=True)[1] > 1])
+
+class LoopedVideoASLDataset(CompleteVideoASLDataset):
+    def __init__(self, motion_path, labels_path, sel_labels, drop_features=[], transform=None, different_length=False, map_file="WLASL_v0.3.json"):
+        super().__init__(motion_path, labels_path, sel_labels, drop_features, transform, different_length, map_file)
+
+    def _load_motions(self):
+        motion_files = sorted(listdir(self.motion_path))
+        for motion_file in tqdm(motion_files):
+            # vframes, aframes, info = torchvision.io.read_video(join(self.motion_path, motion_file))
+            self.motions_keys.append(motion_file.replace(".mp4", ""))
+        self.motions_keys = np.array(self.motions_keys)
+        self.max_length = 150
+        assert len(self.motions_keys) == len(
+            np.unique(self.motions_keys)), "Some motion files are not unique {}".format(
+            self.motions_keys[np.unique(self.motions_keys, return_inverse=True, return_counts=True)[1] > 1])
+
+    def __getitem__(self, idx):
+        if torch.is_tensor(idx):
+            idx = idx.tolist()
+
+        labels = self.labels[idx]
+        if not isinstance(labels, (list, np.ndarray)):
+            labels = np.asarray(labels)
+        motion_key = self.motions_keys[idx]
+        if isinstance(motion_key, (np.ndarray, list)):
+            data = []
+            for i in range(len(labels)):
+                vframes, aframes, info = torchvision.io.read_video(join(self.motion_path, motion_key[i] + ".mp4"))
+                motion = vframes.permute(0, 3, 1, 2)
+                motion = torch.stack([self.transform(m) for m in motion])
+                motion = self._pad_sequence(motion)
+                data.append(motion)
+            data = torch.stack(data)
+            data = data.permute(0, 2, 1, 3, 4)
+        else:
+            vframes, aframes, info = torchvision.io.read_video(join(self.motion_path, motion_key + ".mp4"))
+            motion = vframes.permute(0, 3, 1, 2)
+            motion = torch.stack([self.transform(m) for m in motion])
+            data = self._pad_sequence(motion)
+            data = data.permute(1, 0, 2, 3)
+        sample = data, torch.from_numpy(labels)
+        return sample
