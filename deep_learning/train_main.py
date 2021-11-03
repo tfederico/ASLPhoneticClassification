@@ -43,9 +43,8 @@ def main(args):
     base = 49 + 21
     hand2 = [i + base for i in [2, 3, 6, 7, 10, 11, 14, 15, 18, 19]]
     drop_features = body + hand1 + hand2
-    sel_labels = [os.environ.get('LABEL', '')]
-    print(sel_labels)
-    exit()
+    sel_labels = [args.label]
+
     transforms = None
     if args.model == "3dcnn":
         folder_name = "WLASL2000"
@@ -79,12 +78,14 @@ def main(args):
                 dataset = pickle.load(fp)
             X, y = dataset[:][0], dataset[:][1]
         else:
-            X_train, y_train = load_npy_and_pkl(sel_labels[0], "27-frank-frank", "train")
-            X_val, y_val = load_npy_and_pkl(sel_labels[0], "27-frank-frank", "val")
-            X_test, y_test = load_npy_and_pkl(sel_labels[0], "27-frank-frank", "test")
+            X_train, y_train = load_npy_and_pkl(sel_labels[0], args.tracker, "train")
+            X_val, y_val = load_npy_and_pkl(sel_labels[0], args.tracker, "val")
+            X_test, y_test = load_npy_and_pkl(sel_labels[0], args.tracker, "test")
             X = np.concatenate([X_train, X_val, X_test])
             y = np.concatenate([y_train, y_val, y_test])
             dataset = list(zip(X, y))
+            with open("data/npy/{}/{}/label2id.json".format(sel_labels[0].lower(), args.tracker), "rb") as fp:
+                label2id = json.load(fp)
 
 
     if args.model == "3dcnn":
@@ -125,7 +126,7 @@ def main(args):
                                                                                             log_dir)
 
     else:
-        min_train_loss, max_train_f1_score, min_val_loss, max_val_f1_score = validation(args, dataset, X_train, y_train,
+        min_train_loss, max_train_f1_score, min_val_loss, max_val_f1_score = validation(args, label2id, X_train, y_train,
                                                                                         X_val, y_val,
                                                                                         weights, input_dim,
                                                                                         output_dim, writer,

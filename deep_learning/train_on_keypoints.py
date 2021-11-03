@@ -30,7 +30,7 @@ def run_once(args, model, loader, criterion, optimizer, is_train=False):
     return losses, np.concatenate(outs), np.concatenate(gt)
 
 
-def train_n_epochs(args, dataset, train_dataset, val_dataset, weights, input_dim, output_dim, writer, log_dir, tag):
+def train_n_epochs(args, label2id, train_dataset, val_dataset, weights, input_dim, output_dim, writer, log_dir, tag):
     train_loader = DataLoader(train_dataset, shuffle=True, batch_size=args.batch_size,
                               num_workers=6, drop_last=True, worker_init_fn=seed_worker)
     val_loader = DataLoader(val_dataset, shuffle=False, batch_size=args.batch_size,
@@ -72,7 +72,7 @@ def train_n_epochs(args, dataset, train_dataset, val_dataset, weights, input_dim
             "val/mcc": matthews_corrcoef(val_gt, val_outs)
         }
 
-        for k, v in dataset.label2id.items():
+        for k, v in label2id.items():
             indices = np.where(train_gt == v)
             wdb_log[f"train/acc_{k}"] = accuracy_score(train_gt[indices], train_outs[indices])
             indices = np.where(val_gt == v)
@@ -93,14 +93,14 @@ def train_n_epochs(args, dataset, train_dataset, val_dataset, weights, input_dim
     return train_loss_min, train_f1_max, valid_loss_min, valid_f1_max
 
 
-def perform_validation(args, dataset, X_train, y_train, X_val, y_val, weights, input_dim, output_dim, writer, log_dir):
+def perform_validation(args, label2id, X_train, y_train, X_val, y_val, weights, input_dim, output_dim, writer, log_dir):
 
     train_dataset = torch.utils.data.TensorDataset(torch.from_numpy(X_train),
                                                    torch.from_numpy(y_train))
     val_dataset = torch.utils.data.TensorDataset(torch.from_numpy(X_val),
                                                  torch.from_numpy(y_val))
 
-    train_loss_min, train_f1_max, valid_loss_min, valid_f1_max = train_n_epochs(args, dataset, train_dataset, val_dataset,
+    train_loss_min, train_f1_max, valid_loss_min, valid_f1_max = train_n_epochs(args, label2id, train_dataset, val_dataset,
                                                                                 weights, input_dim, output_dim,
                                                                                 writer, log_dir, tag="")
 
