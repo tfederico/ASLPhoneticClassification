@@ -82,6 +82,14 @@ def train_n_epochs(args, dataset, train_ids, val_ids, weights, input_dim, output
             "val/mcc": matthews_corrcoef(val_gt, val_outs)
         }
 
+        for k, v in dataset.label2id.items():
+            indices = np.where(train_gt == v)
+            wdb_log[f"train/acc_{k}"] = accuracy_score(train_gt[indices], train_outs[indices])
+            indices = np.where(val_gt == v)
+            wdb_log[f"val/acc_{k}"] = accuracy_score(val_gt[indices], val_outs[indices])
+
+        wandb.log(wdb_log, step=i)
+
         scheduler.step()
         model.train()
         if np.mean(val_losses) < valid_loss_min:

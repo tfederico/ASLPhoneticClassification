@@ -11,7 +11,7 @@ from deep_learning.train_on_keypoints import perform_validation as validation
 from deep_learning.train_on_video import perform_validation as cnn_validation
 import wandb
 import os
-from data.dataset import CompleteASLDataset, HRNetASLDataset
+from data.dataset import CompleteASLDataset, HRNetASLDataset, CompleteVideoASLDataset
 
 
 def viktor_to_human(X):
@@ -32,11 +32,10 @@ def load_npy_and_pkl(labels, annotator, split):
 
 def main(args):
 
-    source = "npy"
-
-    wandb.init(project=os.environ.get('WANDB_PROJECT', ''), entity="mrroboto", config=args)
+    wandb.init(config=args)
     args = wandb.config
     init_seed(args.seed)
+    source = args.source
 
     body = list(range(31)) + list(range(37, 44)) + [47, 48]
     base = 49
@@ -44,7 +43,9 @@ def main(args):
     base = 49 + 21
     hand2 = [i + base for i in [2, 3, 6, 7, 10, 11, 14, 15, 18, 19]]
     drop_features = body + hand1 + hand2
-    sel_labels = ["MajorLocation"]
+    sel_labels = [os.environ.get('LABEL', '')]
+    print(sel_labels)
+    exit()
     transforms = None
     if args.model == "3dcnn":
         folder_name = "WLASL2000"
@@ -56,7 +57,7 @@ def main(args):
                 torchvision.transforms.ToTensor()
             ]
         )
-        if source == "load":
+        if source == "raw":
             dataset = CompleteVideoASLDataset(folder_name, "reduced_SignData.csv", sel_labels=sel_labels,
                                               drop_features=drop_features,
                                               different_length=True, transform=transforms)
@@ -124,7 +125,7 @@ def main(args):
                                                                                             log_dir)
 
     else:
-        min_train_loss, max_train_f1_score, min_val_loss, max_val_f1_score = validation(args, X_train, y_train,
+        min_train_loss, max_train_f1_score, min_val_loss, max_val_f1_score = validation(args, dataset, X_train, y_train,
                                                                                         X_val, y_val,
                                                                                         weights, input_dim,
                                                                                         output_dim, writer,

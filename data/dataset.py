@@ -11,6 +11,7 @@ import json
 from tqdm import tqdm
 import pandas as pd
 import cv2
+import random
 
 from joblib import Parallel, delayed
 
@@ -256,7 +257,8 @@ class CompleteVideoASLDataset(CompleteASLDataset):
         max_length = self.get_max_length()
         diff = self.max_length - len(sequence)
         if diff <= 0:
-            return sequence[:max_length]
+            begin = random.randint(0, -diff)
+            return sequence[begin:begin+max_length]
         else:
             zero_padding = False
             if zero_padding:
@@ -331,7 +333,7 @@ class CompleteVideoASLDataset(CompleteASLDataset):
 
 
 def load_npy_motions_parallel(motion_path, motion_file):
-    skel = np.load(os.path.join(motion_path, motion_file))
+    skel = np.load(path.join(motion_path, motion_file))
     return skel, skel.shape[0], motion_file.replace(".mp4.npy", "")
 
 
@@ -354,6 +356,7 @@ class HRNetASLDataset(CompleteASLDataset):
 class LoopedVideoASLDataset(CompleteVideoASLDataset):
     def __init__(self, motion_path, labels_path, sel_labels, drop_features=[], transform=None, different_length=False, map_file="WLASL_v0.3.json"):
         super().__init__(motion_path, labels_path, sel_labels, drop_features, transform, different_length, map_file)
+        self.max_length = 150
 
     def _load_motions(self):
         motion_files = sorted(listdir(self.motion_path))
@@ -361,7 +364,6 @@ class LoopedVideoASLDataset(CompleteVideoASLDataset):
             # vframes, aframes, info = torchvision.io.read_video(join(self.motion_path, motion_file))
             self.motions_keys.append(motion_file.replace(".mp4", ""))
         self.motions_keys = np.array(self.motions_keys)
-        self.max_length = 150
         assert len(self.motions_keys) == len(
             np.unique(self.motions_keys)), "Some motion files are not unique {}".format(
             self.motions_keys[np.unique(self.motions_keys, return_inverse=True, return_counts=True)[1] > 1])

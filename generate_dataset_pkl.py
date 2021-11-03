@@ -1,7 +1,7 @@
 import torch
 import random
 import numpy as np
-from data.dataset import CompleteASLDataset, CompleteVideoASLDataset
+from data.dataset import CompleteASLDataset, CompleteVideoASLDataset, LoopedVideoASLDataset
 from utils.parser import get_parser
 import pickle
 
@@ -23,18 +23,18 @@ def main():
     drop_features = body + hand1 + hand2
 
     sel_labels = ["SignType"]
-    dataset = CompleteASLDataset(folder_name, "reduced_SignData.csv",
-                         sel_labels=sel_labels, drop_features=drop_features,
-                         different_length=True)
+    # dataset = CompleteASLDataset(folder_name, "reduced_SignData.csv",
+    #                      sel_labels=sel_labels, drop_features=drop_features,
+    #                      different_length=True)
+    #
+    # with open("data/pkls/{}_dataset.pkl".format(sel_labels[0].lower()), "wb") as fp:
+    #     pickle.dump(dataset, fp, protocol=4)
 
-    with open("data/pkls/{}_dataset.pkl".format("majorlocation" if ["MajorLocation"] == sel_labels else "signtype"), "wb") as fp:
-        pickle.dump(dataset, fp, protocol=4)
-
-    dataset = CompleteVideoASLDataset("WLASL2000", "reduced_SignData.csv", sel_labels=sel_labels,
+    dataset = LoopedVideoASLDataset("WLASL2000", "reduced_SignData.csv", sel_labels=sel_labels,
                                       drop_features=[],
                                       different_length=True, transform=None)
 
-    with open("data/pkls/{}_video_dataset.pkl".format("majorlocation" if ["MajorLocation"] == sel_labels else "signtype"), "wb") as fp:
+    with open("data/pkls/{}_video_dataset.pkl".format(sel_labels[0].lower()), "wb") as fp:
         pickle.dump(dataset, fp, protocol=4)
 
 
