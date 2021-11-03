@@ -354,9 +354,9 @@ class HRNetASLDataset(CompleteASLDataset):
             self.motions_keys[np.unique(self.motions_keys, return_inverse=True, return_counts=True)[1] > 1])
 
 class LoopedVideoASLDataset(CompleteVideoASLDataset):
-    def __init__(self, motion_path, labels_path, sel_labels, drop_features=[], transform=None, different_length=False, map_file="WLASL_v0.3.json"):
+    def __init__(self, motion_path, labels_path, sel_labels, window_size, drop_features=[], transform=None, different_length=False, map_file="WLASL_v0.3.json"):
         super().__init__(motion_path, labels_path, sel_labels, drop_features, transform, different_length, map_file)
-        self.max_length = 150
+        self.max_length = window_size
 
     def _load_motions(self):
         motion_files = sorted(listdir(self.motion_path))

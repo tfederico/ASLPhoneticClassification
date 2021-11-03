@@ -45,5 +45,6 @@ def get_parser():
     parser.add_argument('--p_padding', default="0,0,0", type=lambda s: [int(item) for item in s.split(',')], help="Pooling padding")
     parser.add_argument('--p_dilation', default="1,1,1", type=lambda s: [int(item) for item in s.split(',')], help="Pooling dilation")
     parser.add_argument('--source', default="npy", type=str, help='', choices=['npy', 'pkl', 'raw'])
+    parser.add_argument('--window_size', default=50, type=int, help='')
 
     return parser

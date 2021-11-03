@@ -11,7 +11,7 @@ from deep_learning.train_on_keypoints import perform_validation as validation
 from deep_learning.train_on_video import perform_validation as cnn_validation
 import wandb
 import os
-from data.dataset import CompleteASLDataset, HRNetASLDataset, CompleteVideoASLDataset
+from data.dataset import CompleteASLDataset, HRNetASLDataset, CompleteVideoASLDataset, LoopedVideoASLDataset
 
 
 def viktor_to_human(X):
@@ -58,8 +58,8 @@ def main(args):
             ]
         )
         if source == "raw":
-            dataset = CompleteVideoASLDataset(folder_name, "reduced_SignData.csv", sel_labels=sel_labels,
-                                              drop_features=drop_features,
+            dataset = LoopedVideoASLDataset(folder_name, "reduced_SignData.csv", sel_labels=sel_labels,
+                                              window_size=args.window_size, drop_features=drop_features,
                                               different_length=True, transform=transforms)
         elif source == "pkl":
             with open("data/pkls/{}_video_dataset.pkl".format(sel_labels[0].lower()), "rb") as fp:
