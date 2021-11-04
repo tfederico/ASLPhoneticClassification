@@ -4,7 +4,7 @@ import adabound
 import numpy as np
 import torch
 from torch.nn import CrossEntropyLoss
-from deep_learning.models import ASLModelMLP, ASLModelI3D, ASLModelLSTM, ASLModelGRU
+from deep_learning.models import ASLModelMLP, ASLModelI3D, ASLModelLSTM, ASLModelGRU, InceptionI3d
 import numpy
 
 
@@ -40,9 +40,13 @@ def get_model(args, input_dim, output_dim):
         return ASLModelMLP(input_dim, args.hidden_dim, output_dim, n_lin_layers=args.n_lin_layers,
                            lin_dropout=args.lin_dropout, batch_norm=args.batch_norm)
     elif args.model == "3dcnn":
-        model = ASLModelI3D(d_in=input_dim[1], h_in=input_dim[2], w_in=input_dim[3], in_channels=input_dim[0],
-                            n_lin_layers=args.n_lin_layers, hidden_dim=args.hidden_dim, out_dim=output_dim,
-                            dropout=args.dropout, lin_dropout=args.lin_dropout, batch_norm=args.batch_norm)
+        model = InceptionI3d(157, in_channels=input_dim[0], dropout_keep_prob=args.dropout,
+                                final_endpoint="Logits", spatial_squeeze=True)
+        model.load_state_dict(torch.load('data/weights/rgb_charades.pt'))
+        model.replace_logits(output_dim)
+        # model = ASLModelI3D(d_in=input_dim[1], h_in=input_dim[2], w_in=input_dim[3], in_channels=input_dim[0],
+        #                     n_lin_layers=args.n_lin_layers, hidden_dim=args.hidden_dim, out_dim=output_dim,
+        #                     dropout=args.dropout, lin_dropout=args.lin_dropout, batch_norm=args.batch_norm)
         return model
     elif args.model == "lstm":
         model = ASLModelLSTM

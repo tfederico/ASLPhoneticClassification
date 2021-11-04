@@ -2,11 +2,10 @@ import torch
 import numpy as np
 import wandb
 from sklearn.metrics import f1_score, accuracy_score, balanced_accuracy_score, matthews_corrcoef
-from sklearn.model_selection import train_test_split
 from torch.utils.data import DataLoader
 from tqdm import tqdm
 from deep_learning.utils import get_loss, get_lr_optimizer, get_lr_scheduler, get_model, seed_worker
-
+import torch.nn.functional as F
 
 def run_once(args, model, loader, criterion, optimizer, is_train=False):
     losses = []
@@ -15,12 +14,19 @@ def run_once(args, model, loader, criterion, optimizer, is_train=False):
     torch.set_grad_enabled(is_train)
     for idx, (inputs, labels) in enumerate(loader):
         inputs, labels = inputs.to(args.device), labels.to(args.device)
+        gt.append(labels.squeeze().detach().cpu().numpy())
         if is_train:
             optimizer.zero_grad()
         output = model(inputs)
-        loss = criterion(output.squeeze(), labels.squeeze())
-        gt.append(labels.squeeze().detach().cpu().numpy())
-        outs.append(torch.argmax(torch.nn.functional.softmax(output.detach().cpu(), dim=1), dim=1).numpy())
+        if len(output.shape) == 2:
+            loss = criterion(output.squeeze(), labels.squeeze())
+            outs.append(torch.argmax(torch.nn.functional.softmax(output.detach().cpu(), dim=1), dim=1).numpy())
+        else:
+            t = inputs.size(2)
+            output = F.upsample(output, t, mode='linear')
+            predictions = torch.max(output, dim=2)[0]
+            loss = criterion(predictions, labels)
+            outs.append(torch.argmax(torch.nn.functional.softmax(predictions.detach().cpu(), dim=1), dim=1).numpy())
         losses.append(loss.item())
         if is_train:
             loss.backward()
