@@ -46,7 +46,7 @@ def main(args):
 
     transforms = None
     if args.model == "3dcnn":
-        folder_name = "WLASL2000"
+        folder_name = "../data/WLASL2000"
         transforms = torchvision.transforms.Compose(
             [
                 torchvision.transforms.ToPILImage("RGB"),
