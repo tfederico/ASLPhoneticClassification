@@ -7,14 +7,13 @@ from deep_learning.utils import init_seed
 from utils.parser import get_parser
 import json
 from sklearn.model_selection import train_test_split
-from deep_learning.train_on_keypoints import perform_validation as validation
-from deep_learning.train_on_video import perform_validation as cnn_validation
+from deep_learning.train_valid import perform_validation as validation
 import wandb
 import os
-from data.dataset import CompleteASLDataset, HRNetASLDataset, CompleteVideoASLDataset, LoopedVideoASLDataset
+from data.dataset import CompleteASLDataset, CompleteVideoASLDataset, LoopedVideoASLDataset, NpyLoopedVideoASLDataset
 
 
-def viktor_to_human(X):
+def adapt_shape(X):
     X = np.transpose(X, (0, 2, 1, 3))
     X = X.reshape((X.shape[0], X.shape[1], -1))
     return X
@@ -23,9 +22,10 @@ def viktor_to_human(X):
 def load_npy_and_pkl(labels, annotator, split):
     assert split in ["train", "val", "test"]
     assert annotator in ["27-frank-frank", "27_2-hrt"]
-    X = np.load("data/npy/{}/{}/{}_data_joint_frank.npy".format(labels.lower(), annotator, split)).squeeze()
-    X = viktor_to_human(X)
-    with open("data/npy/{}/{}/{}_label_frank.pkl".format(labels.lower(), annotator, split), "rb") as fp:
+    suffix = "frank" if "frank" in annotator else "hrt"
+    X = np.load("data/npy/{}/{}/{}_data_joint_{}.npy".format(labels.lower(), annotator, split, suffix)).squeeze()
+    X = adapt_shape(X)
+    with open("data/npy/{}/{}/{}_label_{}.pkl".format(labels.lower(), annotator, split, suffix), "rb") as fp:
         y = np.array(pickle.load(fp)[1])
     return X, y
 
@@ -65,7 +65,21 @@ def main(args):
                 dataset = pickle.load(fp)
                 dataset.set_transforms(transforms)
         else:
-            raise ValueError("npy loading not implemented")
+            suffix = "frank" if "frank" in args.tracker else "hrt"
+            train_dataset = NpyLoopedVideoASLDataset(folder_name, "reduced_SignData.csv", sel_labels=sel_labels,
+                                                    window_size=args.window_size, tracker=args.tracker, set_type="train",
+                                                    suffix=suffix, drop_features=drop_features, different_length=True,
+                                                    transform=transforms)
+            val_dataset = NpyLoopedVideoASLDataset(folder_name, "reduced_SignData.csv", sel_labels=sel_labels,
+                                                    window_size=args.window_size, tracker=args.tracker, set_type="val",
+                                                    suffix=suffix, drop_features=drop_features, different_length=True,
+                                                    transform=transforms)
+            test_dataset = NpyLoopedVideoASLDataset(folder_name, "reduced_SignData.csv", sel_labels=sel_labels,
+                                                    window_size=args.window_size, tracker=args.tracker, set_type="test",
+                                                    suffix=suffix, drop_features=drop_features, different_length=True,
+                                                    transform=transforms)
+            with open("data/npy/{}/{}/label2id.json".format(sel_labels[0].lower(), args.tracker), "rb") as fp:
+                label2id = json.load(fp)
     else:
         folder_name = "csvs"
         if source == "load":
@@ -89,11 +103,10 @@ def main(args):
 
 
     if args.model == "3dcnn":
-        input_dim = dataset[0][0].numpy().shape
-        classes, occurrences = dataset.get_num_occurrences()
+        input_dim = train_dataset[0][0].numpy().shape
+        classes, occurrences = train_dataset.get_num_occurrences()
         output_dim = len(classes)
-        X = list(range(len(dataset)))
-        y = dataset.get_labels()
+        y = np.concatenate((train_dataset.get_labels(), val_dataset.get_labels(), test_dataset.get_labels()))
     else:
         output_dim = len(np.unique(y))
         if args.model != "mlp":
@@ -118,19 +131,17 @@ def main(args):
     log_dir = writer.log_dir if writer else ""
     out_log = {"args": args.__dict__}
 
-    if args.model == "3dcnn":
-        min_train_loss, max_train_f1_score, min_val_loss, max_val_f1_score = cnn_validation(args, dataset,
-                                                                                            X_train, X_val,
-                                                                                            weights, input_dim,
-                                                                                            output_dim, writer,
-                                                                                            log_dir)
+    if args.model != "3dcnn":
+        train_dataset = torch.utils.data.TensorDataset(torch.from_numpy(X_train),
+                                                       torch.from_numpy(y_train))
+        val_dataset = torch.utils.data.TensorDataset(torch.from_numpy(X_val),
+                                                     torch.from_numpy(y_val))
 
-    else:
-        min_train_loss, max_train_f1_score, min_val_loss, max_val_f1_score = validation(args, label2id, X_train, y_train,
-                                                                                        X_val, y_val,
-                                                                                        weights, input_dim,
-                                                                                        output_dim, writer,
-                                                                                        log_dir)
+    min_train_loss, max_train_f1_score, min_val_loss, max_val_f1_score = validation(args, label2id,
+                                                                                    train_dataset, val_dataset,
+                                                                                    weights, input_dim,
+                                                                                    output_dim, writer,
+                                                                                    log_dir)
 
 
     # out_log["min_train_loss"] = min_train_loss

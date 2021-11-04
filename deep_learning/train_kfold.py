@@ -3,7 +3,7 @@ from torch.utils.tensorboard import SummaryWriter
 from torch.utils.data import DataLoader
 from sklearn.model_selection import StratifiedKFold
 
-from deep_learning.train_on_keypoints import train_n_epochs
+from deep_learning.train_valid import train_n_epochs
 
 
 def perform_validation(args, X, y, weights, input_dim, output_dim, writer, log_dir):

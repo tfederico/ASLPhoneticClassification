@@ -313,7 +313,7 @@ class InceptionI3d(nn.Module):
         for k in self.end_points.keys():
             self.add_module(k, self.end_points[k])
 
-    def forward(self, x, pretrained=False, n_tune_layers=-1):
+    def forward(self, x, pretrained=True, n_tune_layers=1):
         if pretrained:
             assert n_tune_layers >= 0
 

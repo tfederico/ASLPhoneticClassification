@@ -10,10 +10,10 @@ from sklearn.preprocessing import LabelEncoder
 import json
 from tqdm import tqdm
 import pandas as pd
-import cv2
 import random
-
+import pickle
 from joblib import Parallel, delayed
+
 
 class ASLDataset(Dataset):
     def __init__(self, motion_path, labels_path, sel_labels, drop_features=[], transform=None, different_length=False, do_preprocessing=True,
@@ -112,12 +112,14 @@ def scale_in_range(X, a, b):
     X_max = X.max(axis=0)
     return (b-a) * (X - X_min)/(X_max - X_min) + a
 
+
 def load_motions_parallel(motion_path, motion_file, drop_features):
     df = read_csv(path.join(motion_path, motion_file))
     df.drop("frame", axis="columns", inplace=True)
     df.drop(df.columns[drop_features], axis="columns", inplace=True)
     df.fillna(-2, inplace=True)
     return df.to_numpy(), df.shape[0], motion_file.replace(".csv", "")
+
 
 class CompleteASLDataset(ASLDataset):
     def __init__(self, motion_path, labels_path, sel_labels, drop_features=[], transform=None, different_length=False, 
@@ -276,6 +278,13 @@ class CompleteVideoASLDataset(CompleteASLDataset):
 
             return seq
 
+    def _load_one_video(self, motion_key):
+        vframes, aframes, info = torchvision.io.read_video(join(self.motion_path, motion_key + ".mp4"))
+        motion = vframes.permute(0, 3, 1, 2)
+        motion = torch.stack([self.transform(m) for m in motion])
+        motion = self._pad_sequence(motion)
+        return motion
+
     def __getitem__(self, idx):
         if torch.is_tensor(idx):
             idx = idx.tolist()
@@ -285,36 +294,11 @@ class CompleteVideoASLDataset(CompleteASLDataset):
             labels = np.asarray(labels)
         motion_key = self.motions_keys[idx]
         if isinstance(motion_key, (np.ndarray, list)):
-            data = []
-            for i in range(len(labels)):
-                cap = cv2.VideoCapture(join(self.motion_path, motion_key[i] + ".mp4"))
-                motion = []
-                while cap.isOpened():
-                    ret, frame = cap.read()
-                    if not (frame is None):
-                        if self.transform:
-                            frame = self.transform(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
-                        motion.append(frame)
-                    else:
-                        break
-                cap.release()
-                motion = self._pad_sequence(torch.stack(motion))
-                data.append(motion)
+            data = [self._load_one_video(motion_key[i]) for i in range(len(labels))]
             data = torch.stack(data)
             data = data.permute(0, 2, 1, 3, 4)
         else:
-            cap = cv2.VideoCapture(join(self.motion_path, motion_key + ".mp4"))
-            motion = torch.Tensor()
-            while cap.isOpened():
-                ret, frame = cap.read()
-                if not (frame is None):
-                    if self.transform:
-                        frame = self.transform(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
-                    motion = torch.cat((motion, frame.unsqueeze(dim=0)))
-                else:
-                    break
-            cap.release()
-            data = self._pad_sequence(motion)
+            data = self._load_one_video(motion_key)
             data = data.permute(1, 0, 2, 3)
         sample = data, torch.from_numpy(labels)
         return sample
@@ -368,29 +352,24 @@ class LoopedVideoASLDataset(CompleteVideoASLDataset):
             np.unique(self.motions_keys)), "Some motion files are not unique {}".format(
             self.motions_keys[np.unique(self.motions_keys, return_inverse=True, return_counts=True)[1] > 1])
 
-    def __getitem__(self, idx):
-        if torch.is_tensor(idx):
-            idx = idx.tolist()
+class NpyLoopedVideoASLDataset(LoopedVideoASLDataset):
+    def __init__(self, motion_path, labels_path, sel_labels, window_size, tracker, set_type, suffix, drop_features=[],
+                 transform=None, different_length=False, map_file="WLASL_v0.3.json"):
+        self.tracker = tracker
+        self.set_type = set_type
+        self.suffix = suffix
+        super().__init__(motion_path, labels_path, sel_labels, window_size, drop_features, transform, different_length, map_file)
 
-        labels = self.labels[idx]
-        if not isinstance(labels, (list, np.ndarray)):
-            labels = np.asarray(labels)
-        motion_key = self.motions_keys[idx]
-        if isinstance(motion_key, (np.ndarray, list)):
-            data = []
-            for i in range(len(labels)):
-                vframes, aframes, info = torchvision.io.read_video(join(self.motion_path, motion_key[i] + ".mp4"))
-                motion = vframes.permute(0, 3, 1, 2)
-                motion = torch.stack([self.transform(m) for m in motion])
-                motion = self._pad_sequence(motion)
-                data.append(motion)
-            data = torch.stack(data)
-            data = data.permute(0, 2, 1, 3, 4)
-        else:
-            vframes, aframes, info = torchvision.io.read_video(join(self.motion_path, motion_key + ".mp4"))
-            motion = vframes.permute(0, 3, 1, 2)
-            motion = torch.stack([self.transform(m) for m in motion])
-            data = self._pad_sequence(motion)
-            data = data.permute(1, 0, 2, 3)
-        sample = data, torch.from_numpy(labels)
-        return sample
+    def _load_motions(self):
+        pass
+
+    def _join_and_remove(self):
+        pass
+
+    def _load_labels(self):
+        with open("data/npy/{}/{}/{}_label_{}.pkl".format(self.sel_labels[0].lower(), self.tracker, self.set_type, self.suffix),
+                  "rb") as fp:
+            self.motions_keys, self.labels = pickle.load(fp)
+
+    def _preprocessing(self):
+        self.labels = LabelEncoder().fit_transform(self.labels)

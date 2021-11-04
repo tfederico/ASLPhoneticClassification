@@ -93,12 +93,7 @@ def train_n_epochs(args, label2id, train_dataset, val_dataset, weights, input_di
     return train_loss_min, train_f1_max, valid_loss_min, valid_f1_max
 
 
-def perform_validation(args, label2id, X_train, y_train, X_val, y_val, weights, input_dim, output_dim, writer, log_dir):
-
-    train_dataset = torch.utils.data.TensorDataset(torch.from_numpy(X_train),
-                                                   torch.from_numpy(y_train))
-    val_dataset = torch.utils.data.TensorDataset(torch.from_numpy(X_val),
-                                                 torch.from_numpy(y_val))
+def perform_validation(args, label2id, train_dataset, val_dataset, weights, input_dim, output_dim, writer, log_dir):
 
     train_loss_min, train_f1_max, valid_loss_min, valid_f1_max = train_n_epochs(args, label2id, train_dataset, val_dataset,
                                                                                 weights, input_dim, output_dim,
