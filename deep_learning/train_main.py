@@ -9,8 +9,7 @@ import json
 from sklearn.model_selection import train_test_split
 from deep_learning.train_valid import perform_validation as validation
 import wandb
-import os
-from data.dataset import CompleteASLDataset, CompleteVideoASLDataset, LoopedVideoASLDataset, NpyLoopedVideoASLDataset
+from deep_learning.dataset import CompleteASLDataset, LoopedVideoASLDataset, NpyLoopedVideoASLDataset
 
 
 def adapt_shape(X):

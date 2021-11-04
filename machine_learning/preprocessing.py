@@ -1,5 +1,5 @@
 import numpy as np
-from data.dataset import ASLDataset, CompleteASLDataset
+from deep_learning.dataset import CompleteASLDataset
 
 ## Possible labels
 # Compound, Initialized, FingerspelledLoanSign, SignType, MajorLocation,

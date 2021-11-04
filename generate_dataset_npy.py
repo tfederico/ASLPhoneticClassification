@@ -1,9 +1,8 @@
 import torch
 import random
 import numpy as np
-from data.dataset import CompleteVideoASLDataset, LoopedVideoASLDataset
+from deep_learning.dataset import LoopedVideoASLDataset
 from utils.parser import get_parser
-import pickle
 import torchvision
 from tqdm import tqdm
 

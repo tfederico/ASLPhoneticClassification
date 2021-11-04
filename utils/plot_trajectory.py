@@ -1,5 +1,5 @@
 import numpy as np
-from data.dataset import ASLDataset
+from deep_learning.dataset import ASLDataset
 import matplotlib.pyplot as plt
 ## Joints names
 # Heel, Knee, Hip, Wrist, Elbow, Shoulder, Neck, Head, Nose,
