@@ -64,13 +64,13 @@ def train_n_epochs(args, label2id, train_dataset, val_dataset, weights, input_di
             writer.add_scalar("F1{}/val".format(tag), val_f1_score, i)
 
         wdb_log = {
-            "train/loss": np.mean(train_losses),
+            "train/loss": np.mean(train_losses).item(),
             "train/micro_f1": train_f1_score,
             "train/macro_f1": f1_score(train_gt, train_outs, average="macro"),
             "train/accuracy": accuracy_score(train_gt, train_outs),
             "train/balanced_accuracy": balanced_accuracy_score(train_gt, train_outs),
             "train/mcc": matthews_corrcoef(train_gt, train_outs),
-            "val/loss": np.mean(val_losses),
+            "val/loss": np.mean(val_losses).item(),
             "val/micro_f1": val_f1_score,
             "val/macro_f1": f1_score(val_gt, val_outs, average="macro"),
             "val/accuracy": accuracy_score(val_gt, val_outs),
