@@ -38,9 +38,9 @@ def run_once(args, model, loader, criterion, optimizer, is_train=False):
 
 def train_n_epochs(args, label2id, train_dataset, val_dataset, weights, input_dim, output_dim, writer, log_dir, tag):
     train_loader = DataLoader(train_dataset, shuffle=True, batch_size=args.batch_size,
-                              num_workers=6, drop_last=True, worker_init_fn=seed_worker)
+                              num_workers=8, drop_last=True, worker_init_fn=seed_worker)
     val_loader = DataLoader(val_dataset, shuffle=False, batch_size=args.batch_size,
-                            num_workers=2, drop_last=False, worker_init_fn=seed_worker)
+                            num_workers=8, drop_last=False, worker_init_fn=seed_worker)
 
     criterion = get_loss(weights)
     model = get_model(args, input_dim, output_dim).to(args.device)
