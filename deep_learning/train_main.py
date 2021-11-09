@@ -51,7 +51,7 @@ def main(args):
             [
                 torchvision.transforms.ToPILImage("RGB"),
                 torchvision.transforms.Resize((256, 256)),
-                torchvision.transforms.CenterCrop(224),
+                torchvision.transforms.RandomCrop(224),
                 torchvision.transforms.ToTensor()
             ]
         )
