@@ -10,6 +10,7 @@ from sklearn.model_selection import train_test_split
 from deep_learning.train_valid import perform_validation as validation
 import wandb
 from deep_learning.dataset import CompleteASLDataset, LoopedVideoASLDataset, NpyLoopedVideoASLDataset
+from deep_learning.dataset import scale_in_range
 
 
 def adapt_shape(X):
@@ -52,7 +53,8 @@ def main(args):
                 torchvision.transforms.ToPILImage("RGB"),
                 torchvision.transforms.Resize((256, 256)),
                 torchvision.transforms.RandomCrop(224),
-                torchvision.transforms.ToTensor()
+                torchvision.transforms.ToTensor(),
+                torchvision.transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
             ]
         )
         if source == "raw":
@@ -96,6 +98,8 @@ def main(args):
             X_test, y_test = load_npy_and_pkl(sel_labels[0], args.tracker, "test")
             X = np.concatenate([X_train, X_val, X_test])
             y = np.concatenate([y_train, y_val, y_test])
+            X = np.apply_along_axis(scale_in_range, 0, X, -1, 1)
+            X_train, X_val, X_test = X[:len(X_train)], X[len(X_train):len(X_train) + len(X_val)], X[len(X_train) + len(X_val):]
             dataset = list(zip(X, y))
             with open("data/npy/{}/{}/label2id.json".format(sel_labels[0].lower(), args.tracker), "rb") as fp:
                 label2id = json.load(fp)

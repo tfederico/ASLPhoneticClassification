@@ -108,8 +108,8 @@ class ASLDataset(Dataset):
 
 def scale_in_range(X, a, b):
     assert a < b
-    X_min = X.min(axis=0)
-    X_max = X.max(axis=0)
+    X_min = X.min()
+    X_max = X.max()
     return (b-a) * (X - X_min)/(X_max - X_min) + a
 
 
