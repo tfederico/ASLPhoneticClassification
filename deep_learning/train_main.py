@@ -29,8 +29,9 @@ def load_npy_and_pkl(labels, annotator, split, zero_shot=False):
     X = np.load("data/npy/{}/{}/{}_data_joint_{}.npy".format(labels.lower(), annotator, split, suffix)).squeeze()
     X = adapt_shape(X)
     with open("data/npy/{}/{}/{}_label_{}.pkl".format(labels.lower(), annotator, split, suffix), "rb") as fp:
-        y = np.array(pickle.load(fp)[1])
-    return X, y
+        arr = pickle.load(fp)
+        ids, y = np.array(arr[0]), np.array(arr[1])
+    return X, y, ids
 
 
 def main(args):
@@ -96,9 +97,9 @@ def main(args):
                 dataset = pickle.load(fp)
             X, y = dataset[:][0], dataset[:][1]
         else:
-            X_train, y_train = load_npy_and_pkl(sel_labels[0], args.tracker, "train")
-            X_val, y_val = load_npy_and_pkl(sel_labels[0], args.tracker, "val")
-            X_test, y_test = load_npy_and_pkl(sel_labels[0], args.tracker, "test")
+            X_train, y_train, ids_train = load_npy_and_pkl(sel_labels[0], args.tracker, "train")
+            X_val, y_val, ids_val = load_npy_and_pkl(sel_labels[0], args.tracker, "val")
+            X_test, y_test, ids_test = load_npy_and_pkl(sel_labels[0], args.tracker, "test")
             X = np.concatenate([X_train, X_val, X_test])
             y = np.concatenate([y_train, y_val, y_test])
             X = np.apply_along_axis(scale_in_range, 0, X, -1, 1)

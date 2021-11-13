@@ -7,11 +7,11 @@ from deep_learning.utils import init_seed
 from utils.parser import get_parser
 import json
 from sklearn.model_selection import train_test_split
-from deep_learning.train_valid import perform_validation as validation
+from deep_learning.train_valid import run_once
 import wandb
 from deep_learning.dataset import CompleteASLDataset, LoopedVideoASLDataset, NpyLoopedVideoASLDataset
 from deep_learning.dataset import scale_in_range
-
+from deep_learning.train_main import load_npy_and_pkl
 
 def adapt_shape(X):
     X = np.transpose(X, (0, 2, 1, 3))
@@ -19,15 +19,58 @@ def adapt_shape(X):
     return X
 
 
-def load_npy_and_pkl(labels, annotator, split):
-    assert split in ["train", "val", "test", "train+val"]
-    assert annotator in ["27-frank-frank", "27_2-hrt"]
-    suffix = "frank" if "frank" in annotator else "hrt"
-    X = np.load("data/npy/{}/{}/{}_data_joint_{}.npy".format(labels.lower(), annotator, split, suffix)).squeeze()
-    X = adapt_shape(X)
-    with open("data/npy/{}/{}/{}_label_{}.pkl".format(labels.lower(), annotator, split, suffix), "rb") as fp:
-        y = np.array(pickle.load(fp)[1])
-    return X, y
+def train_and_test(args, label2id, train_dataset, test_dataset, weights, input_dim, output_dim, writer, log_dir, tag):
+    train_loader = DataLoader(train_dataset, shuffle=True, batch_size=args.batch_size,
+                              num_workers=8, drop_last=True, worker_init_fn=seed_worker)
+    test_loader = DataLoader(test_dataset, shuffle=False, batch_size=args.batch_size,
+                            num_workers=8, drop_last=False, worker_init_fn=seed_worker)
+
+    criterion = get_loss(weights)
+    model = get_model(args, input_dim, output_dim).to(args.device)
+    optimizer = get_lr_optimizer(args, model)
+    scheduler = get_lr_scheduler(args, optimizer)
+
+    train_loss_min = 1000
+    train_f1_max = -1
+
+    for i in tqdm(range(args.epochs)):
+        train_losses, train_outs, train_gt = run_once(args, model, train_loader, criterion, optimizer, is_train=True)
+        train_f1_score = f1_score(train_gt, train_outs, average="micro")
+
+        if writer:
+            writer.add_scalar("Loss{}/train".format(tag), np.mean(train_losses), i)
+            writer.add_scalar("F1{}/train".format(tag), train_f1_score, i)
+
+        wdb_log = {
+            "train/loss": np.mean(train_losses).item(),
+            "train/micro_f1": train_f1_score,
+            "train/macro_f1": f1_score(train_gt, train_outs, average="macro"),
+            "train/accuracy": accuracy_score(train_gt, train_outs),
+            "train/balanced_accuracy": balanced_accuracy_score(train_gt, train_outs),
+            "train/mcc": matthews_corrcoef(train_gt, train_outs)
+        }
+
+        for k, v in label2id.items():
+            indices = np.where(train_gt == v)
+            wdb_log[f"train/acc_{k}"] = accuracy_score(train_gt[indices], train_outs[indices])
+
+        scheduler.step()
+        wandb.log(wdb_log, step=i)
+
+    model.eval()
+    test_losses, test_outs, test_gt = run_once(args, model, test_loader, criterion, None)
+
+    wdb_log = {
+        "test/loss": np.mean(test_losses).item(),
+        "test/micro_f1": f1_score(test_gt, test_outs, average="micro"),
+        "test/macro_f1": f1_score(test_gt, test_outs, average="macro"),
+        "test/accuracy": accuracy_score(test_gt, test_outs),
+        "test/balanced_accuracy": balanced_accuracy_score(test_gt, test_outs),
+        "test/mcc": matthews_corrcoef(test_gt, test_outs)
+    }
+    wandb.log(wdb_log, step=i)
+
+    return test_outs, test_gt
 
 
 def main(args):
@@ -89,8 +132,8 @@ def main(args):
                 dataset = pickle.load(fp)
             X, y = dataset[:][0], dataset[:][1]
         else:
-            X_train, y_train = load_npy_and_pkl(sel_labels[0], args.tracker, "train+val")
-            X_test, y_test = load_npy_and_pkl(sel_labels[0], args.tracker, "test")
+            X_train, y_train, ids_train = load_npy_and_pkl(sel_labels[0], args.tracker, "train+val")
+            X_test, y_test, ids_test = load_npy_and_pkl(sel_labels[0], args.tracker, "test")
             X = np.concatenate([X_train, X_test])
             y = np.concatenate([y_train, y_test])
             X = np.apply_along_axis(scale_in_range, 0, X, -1, 1)
@@ -133,11 +176,22 @@ def main(args):
         test_dataset = torch.utils.data.TensorDataset(torch.from_numpy(X_test),
                                                      torch.from_numpy(y_test))
 
-    min_train_loss, max_train_f1_score, min_val_loss, max_val_f1_score = validation(args, label2id,
-                                                                                    train_dataset, test_dataset,
-                                                                                    weights, input_dim,
-                                                                                    output_dim, writer,
-                                                                                    log_dir)
+    test_out, test_gt = train_and_test(args, label2id, train_dataset, test_dataset,
+                                                    weights, input_dim,
+                                                    output_dim, writer,
+                                                    log_dir)
+
+    for k, v in label2id.items():
+        test_out = np.where(test_out == v, k, test_out)
+        test_gt = np.where(test_gt == v, k, test_gt)
+
+    results = dict(zip(test_ids, test_out))
+    with open("temp_results.json", "w") as fp:
+        json.dump(results, fp, sort_keys=True)
+    wandb.log("temp_results.json")
+    os.remove("temp_results.json")
+
+
 
 
 if __name__ == "__main__":
