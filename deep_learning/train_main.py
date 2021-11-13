@@ -19,10 +19,13 @@ def adapt_shape(X):
     return X
 
 
-def load_npy_and_pkl(labels, annotator, split):
-    assert split in ["train", "val", "test"]
+def load_npy_and_pkl(labels, annotator, split, zero_shot=False):
+    assert split in ["train", "val", "test", "train+val"]
     assert annotator in ["27-frank-frank", "27_2-hrt"]
     suffix = "frank" if "frank" in annotator else "hrt"
+    if zero_shot:
+        suffix += "-zs"
+        annotator += "-zs"
     X = np.load("data/npy/{}/{}/{}_data_joint_{}.npy".format(labels.lower(), annotator, split, suffix)).squeeze()
     X = adapt_shape(X)
     with open("data/npy/{}/{}/{}_label_{}.pkl".format(labels.lower(), annotator, split, suffix), "rb") as fp:
