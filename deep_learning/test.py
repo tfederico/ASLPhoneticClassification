@@ -185,10 +185,13 @@ def main(args):
                                                     weights, input_dim,
                                                     output_dim, writer,
                                                     log_dir, "")
+                                                    
+    test_out = test_out.astype(str)
+    test_gt = test_gt.astype(str)
 
     for k, v in label2id.items():
-        test_out = np.where(test_out == v, k, test_out)
-        test_gt = np.where(test_gt == v, k, test_gt)
+        test_out = np.where(test_out == str(v), k, test_out)
+        test_gt = np.where(test_gt == str(v), k, test_gt)
 
     results = dict(zip(ids_test, test_out))
     with open("temp_results.json", "w") as fp:
