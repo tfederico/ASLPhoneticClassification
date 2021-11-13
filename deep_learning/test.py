@@ -193,7 +193,7 @@ def main(args):
         test_out = np.where(test_out == str(v), k, test_out)
         test_gt = np.where(test_gt == str(v), k, test_gt)
 
-    results = dict(zip(ids_test, test_out))
+    results = dict(zip([int(i) for i in ids_test], test_out))
     with open("temp_results.json", "w") as fp:
         json.dump(results, fp, sort_keys=True)
     wandb.save("temp_results.json")
