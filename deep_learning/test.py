@@ -8,10 +8,15 @@ from utils.parser import get_parser
 import json
 from sklearn.model_selection import train_test_split
 from deep_learning.train_valid import run_once
+from deep_learning.utils import get_loss, get_lr_optimizer, get_lr_scheduler, get_model, seed_worker
 import wandb
 from deep_learning.dataset import CompleteASLDataset, LoopedVideoASLDataset, NpyLoopedVideoASLDataset
 from deep_learning.dataset import scale_in_range
 from deep_learning.train_main import load_npy_and_pkl
+from torch.utils.data import DataLoader
+from tqdm import tqdm
+from sklearn.metrics import f1_score, accuracy_score, balanced_accuracy_score, matthews_corrcoef
+
 
 def adapt_shape(X):
     X = np.transpose(X, (0, 2, 1, 3))
@@ -179,17 +184,16 @@ def main(args):
     test_out, test_gt = train_and_test(args, label2id, train_dataset, test_dataset,
                                                     weights, input_dim,
                                                     output_dim, writer,
-                                                    log_dir)
+                                                    log_dir, "")
 
     for k, v in label2id.items():
         test_out = np.where(test_out == v, k, test_out)
         test_gt = np.where(test_gt == v, k, test_gt)
 
-    results = dict(zip(test_ids, test_out))
+    results = dict(zip(ids_test, test_out))
     with open("temp_results.json", "w") as fp:
         json.dump(results, fp, sort_keys=True)
-    wandb.log("temp_results.json")
-    os.remove("temp_results.json")
+    wandb.save("temp_results.json")
 
 
 
