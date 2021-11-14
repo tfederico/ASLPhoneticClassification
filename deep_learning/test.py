@@ -137,8 +137,8 @@ def main(args):
                 dataset = pickle.load(fp)
             X, y = dataset[:][0], dataset[:][1]
         else:
-            X_train, y_train, ids_train = load_npy_and_pkl(sel_labels[0], args.tracker, "train+val")
-            X_test, y_test, ids_test = load_npy_and_pkl(sel_labels[0], args.tracker, "test")
+            X_train, y_train, ids_train = load_npy_and_pkl(sel_labels[0], args.tracker, "train+val", zero_shot=args.zero_shot)
+            X_test, y_test, ids_test = load_npy_and_pkl(sel_labels[0], args.tracker, "test", zero_shot=args.zero_shot)
             X = np.concatenate([X_train, X_test])
             y = np.concatenate([y_train, y_test])
             X = np.apply_along_axis(scale_in_range, 0, X, -1, 1)
@@ -186,17 +186,15 @@ def main(args):
                                                     output_dim, writer,
                                                     log_dir, "")
                                                     
-    test_out = test_out.astype(str)
-    test_gt = test_gt.astype(str)
-
-    for k, v in label2id.items():
-        test_out = np.where(test_out == str(v), k, test_out)
-        test_gt = np.where(test_gt == str(v), k, test_gt)
+    id2label = {v: k for k, v in label2id.items()}
+    
+    test_out = [id2label[t] for t in test_out]
+    test_gt = [id2label[t] for t in test_gt]
 
     results = dict(zip([int(i) for i in ids_test], test_out))
-    with open("temp_results.json", "w") as fp:
+    with open(f"temp_results_{args.model}_{args.label}_{args.tracker}_{args.zero_shot}.json", "w") as fp:
         json.dump(results, fp, sort_keys=True)
-    wandb.save("temp_results.json")
+    wandb.save(f"temp_results_{args.model}_{args.label}_{args.tracker}_{args.zero_shot}.json")
 
 
 
