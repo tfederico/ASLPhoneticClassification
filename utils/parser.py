@@ -48,5 +48,6 @@ def get_parser():
     parser.add_argument('--window_size', default=50, type=int, help='')
     parser.add_argument('--label', type=str, choices=["MajorLocation", "Movement", "SignType", "MinorLocation", "Flexion", "SelectedFingers"])
     parser.add_argument('--tracker', type=str, default="27-frank-frank", choices=["27-frank-frank", "27_2-hrt"])
+    parser.add_argument('--zero_shot', type=str2bool, default=False, choices=[True, False])
 
     return parser
