@@ -124,7 +124,6 @@ def main(args):
                                                     suffix=suffix, drop_features=drop_features, different_length=True,
                                                     transform=transforms)
             ids_test = test_dataset.motions_keys
-            print(ids_test)
             with open("data/npy/{}/{}/label2id.json".format(sel_labels[0].lower(), args.tracker), "rb") as fp:
                 label2id = json.load(fp)
     else:
