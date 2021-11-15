@@ -1,0 +1,53 @@
+Experiment_name: signtype-frank
+
+feeder: feeders.feeder.Feeder
+train_feeder_args:
+  data_path: ./data/final/signtype/27-frank-frank/train_data_joint_frank.npy
+  label_path: ./data/final/signtype/27-frank-frank/train_label_frank.pkl
+  debug: False
+  random_choose: True
+  window_size: 100
+  random_shift: True
+  normalization: True
+  random_mirror: False
+  random_mirror_p: 0.5
+  is_vector: False
+  rescale: True
+  shift_small: True
+  mask: True
+
+test_feeder_args:
+  data_path: ./data/final/signtype/27-frank-frank/val_data_joint_frank.npy
+  label_path: ./data/final/signtype/27-frank-frank/val_label_frank.pkl
+  random_mirror: False
+  normalization: True
+  rescale: True
+  mask: True
+
+model: model.decouple_gcn_attn.Model
+model_args:
+  num_class: 5
+  num_point: 27
+  in_channels: 3
+  num_person: 1
+  graph: graph.sign_27_frank.Graph
+  groups: 16
+  block_size: 41
+  graph_args:
+    labeling_mode: 'spatial'
+
+#optim
+weight_decay: 0.0001
+base_lr: 0.1
+step: [80, 90]
+
+# training
+device: [0]
+keep_rate: 0.9
+only_train_epoch: 1
+batch_size: 96
+test_batch_size: 96
+num_epoch: 100
+nesterov: True
+warm_up_epoch: 20
+label2id: ./data/final/signtype/27-frank-frank/label2id.json
