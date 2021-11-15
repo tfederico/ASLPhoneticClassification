@@ -1,0 +1,43 @@
+command:
+  - ${env}
+  - ${interpreter}
+  - ${program}
+  - '--config'
+  - 'config/testing.yaml'
+  - ${args}
+method: bayes
+metric:
+  goal: maximize
+  name: eval/mcc
+parameters:
+  num_epoch:
+    distribution: int_uniform
+    max: 100
+    min: 50
+  base_lr:
+    max: 0.3
+    min: 0.01
+    distribution: uniform
+  step_ratio:
+    distribution: uniform
+    max: 1.0
+    min: 0.4
+  train_feeder_args.window_size:
+    distribution: int_uniform
+    max: 150
+    min: 50
+  block_size_k:
+    distribution: int_uniform
+    max: 25
+    min: 10
+  model_args.groups:
+    values:
+      - 8
+      - 16
+      - 32
+  keep_rate:
+    distribution: uniform
+    max: 0.9
+    min: 0.5
+program: main.py
+project: asl
