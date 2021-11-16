@@ -115,6 +115,8 @@ def main(args):
                 dataset.set_transforms(transforms)
         else:
             suffix = "frank" if "frank" in args.tracker else "hrt"
+            if args.zero_shot:
+                suffix += "-zs"
             train_dataset = NpyLoopedVideoASLDataset(folder_name, "reduced_SignData.csv", sel_labels=sel_labels,
                                                     window_size=args.window_size, tracker=args.tracker, set_type="train+val",
                                                     suffix=suffix, drop_features=drop_features, different_length=True,
@@ -123,7 +125,7 @@ def main(args):
                                                     window_size=args.window_size, tracker=args.tracker, set_type="test",
                                                     suffix=suffix, drop_features=drop_features, different_length=True,
                                                     transform=transforms)
-            with open("data/npy/{}/{}/label2id.json".format(sel_labels[0].lower(), args.tracker), "rb") as fp:
+            with open("data/npy/{}/{}/label2id.json".format(sel_labels[0].lower(), args.tracker+"-zs" if args.zero_shot else args.tracker), "rb") as fp:
                 label2id = json.load(fp)
     else:
         folder_name = "csvs"
