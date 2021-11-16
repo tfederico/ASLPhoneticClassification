@@ -46,6 +46,10 @@ def train_n_epochs(args, label2id, train_dataset, val_dataset, weights, input_di
     model = get_model(args, input_dim, output_dim).to(args.device)
     optimizer = get_lr_optimizer(args, model)
     scheduler = get_lr_scheduler(args, optimizer)
+    if torch.cuda.device_count() > 1:
+        print("Let's use", torch.cuda.device_count(), "GPUs!")
+        # dim = 0 [30, xxx] -> [10, ...], [10, ...], [10, ...] on 3 GPUs
+        model = torch.nn.DataParallel(model)
 
     train_loss_min = 1000
     train_f1_max = -1
