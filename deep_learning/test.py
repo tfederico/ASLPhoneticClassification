@@ -118,11 +118,11 @@ def main(args):
             if args.zero_shot:
                 suffix += "-zs"
             train_dataset = NpyLoopedVideoASLDataset(folder_name, "reduced_SignData.csv", sel_labels=sel_labels,
-                                                    window_size=args.window_size, tracker=args.tracker, set_type="train+val",
+                                                    window_size=args.window_size, tracker=args.tracker+"-zs" if args.zero_shot else args.tracker, set_type="train+val",
                                                     suffix=suffix, drop_features=drop_features, different_length=True,
                                                     transform=transforms)
             test_dataset = NpyLoopedVideoASLDataset(folder_name, "reduced_SignData.csv", sel_labels=sel_labels,
-                                                    window_size=args.window_size, tracker=args.tracker, set_type="test",
+                                                    window_size=args.window_size, tracker=args.tracker+"-zs" if args.zero_shot else args.tracker, set_type="test",
                                                     suffix=suffix, drop_features=drop_features, different_length=True,
                                                     transform=transforms)
             ids_test = test_dataset.motions_keys
