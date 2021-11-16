@@ -1,0 +1,50 @@
+
+Experiment_name: test
+
+feeder: feeders.feeder.Feeder
+train_feeder_args:
+  data_path: /data/asl/out/signtype/25-4cls-hand/4cls-hand_train_data_joint.npy
+  label_path: /data/asl/out/signtype/25-4cls-hand/4cls-hand_train_label.pkl
+  debug: True
+  random_choose: True
+  window_size: 100
+  random_shift: True
+  normalization: True
+  random_mirror: False
+  random_mirror_p: 0.5
+  is_vector: False
+
+test_feeder_args:
+  data_path: /data/asl/out/signtype/25-4cls-hand/4cls-hand_val_data_joint.npy
+  label_path: /data/asl/out/signtype/25-4cls-hand/4cls-hand_val_label.pkl
+  debug: True
+  random_mirror: False
+  normalization: True
+
+model: model.decouple_gcn_attn.Model
+model_args:
+  num_class: 4
+  num_point: 25
+  num_person: 1
+  graph: graph.sign_25.Graph
+  groups: 16
+  block_size: 41
+  graph_args:
+    labeling_mode: 'spatial'
+
+#optim
+weight_decay: 0.0001
+base_lr: 0.1
+step: [30, 40]
+
+# training
+device: [0]
+keep_rate: 0.9
+only_train_epoch: 2
+batch_size: 64
+test_batch_size: 64
+num_epoch: 50
+cuda: False
+nesterov: True
+warm_up_epoch: 20
+label2id: /data/asl/out/signtype/7-frank-4cls-2d/label2id.json
