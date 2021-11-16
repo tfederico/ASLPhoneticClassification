@@ -35,6 +35,11 @@ def train_and_test(args, label2id, train_dataset, test_dataset, weights, input_d
     optimizer = get_lr_optimizer(args, model)
     scheduler = get_lr_scheduler(args, optimizer)
 
+    if torch.cuda.device_count() > 1:
+        print("Let's use", torch.cuda.device_count(), "GPUs!")
+        # dim = 0 [30, xxx] -> [10, ...], [10, ...], [10, ...] on 3 GPUs
+        model = torch.nn.DataParallel(model)
+
     train_loss_min = 1000
     train_f1_max = -1
 
