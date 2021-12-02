@@ -192,7 +192,7 @@ class CompleteASLDataset(ASLDataset):
         ldf = ldf.groupby(by="LemmaID", as_index=False).first() # remove duplicate entries
         ldf["EntryID"] = ldf["EntryID"].str.replace("_1", "") # remove duplicate number from name
         ldf["EntryID"] = ldf["EntryID"].str.replace("_", " ") # remove underscore
-        ldf["EntryID"] = ldf["EntryID"].str.lower()
+        ldf["EntryID"] = ldf["EntryID"].str.strip().lower()
         # some are easier to fix manually...
         ldf.loc[ldf['EntryID'] == "hotdog", ['EntryID']] = "hot dog"
         ldf.loc[ldf['EntryID'] == "frenchfries", ['EntryID']] = "french fries"
