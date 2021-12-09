@@ -18,7 +18,7 @@ from joblib import Parallel, delayed
 class ASLDataset(Dataset):
     def __init__(self, motion_path, labels_path, sel_labels, drop_features=[], transform=None, different_length=False, do_preprocessing=True,
                  relabel_map={}):
-        dir_path = path.dirname(path.realpath(__file__))
+        dir_path = "/".join(path.dirname(path.realpath(__file__)).split("/")[:-1])+"/data"
         self.motion_path = path.join(dir_path, motion_path)
         self.labels_path = path.join(dir_path, labels_path)
         self.transform = transform
@@ -124,7 +124,7 @@ def load_motions_parallel(motion_path, motion_file, drop_features):
 class CompleteASLDataset(ASLDataset):
     def __init__(self, motion_path, labels_path, sel_labels, drop_features=[], transform=None, different_length=False, 
                  map_file="WLASL_v0.3.json", debug=False, *args, **kwargs):
-        dir_path = path.dirname(path.realpath(__file__))
+        dir_path = "/".join(path.dirname(path.realpath(__file__)).split("/")[:-1])+"/data"
         self.map_file = path.join(dir_path, map_file)
         self.debug = debug or []
         super().__init__(motion_path, labels_path, sel_labels, drop_features, transform, different_length)
@@ -189,10 +189,15 @@ class CompleteASLDataset(ASLDataset):
     def _load_labels(self):
         ldf = read_csv(self.labels_path)
         ldf.sort_values(by=['EntryID'], inplace=True) # sort them so that when you remove the duplicates the first has _1
+        ldf["LemmaID"] = ldf["LemmaID"].str.replace("_5", "")
+        ldf["LemmaID"] = ldf["LemmaID"].str.replace("_4", "")
+        ldf["LemmaID"] = ldf["LemmaID"].str.replace("_3", "")
+        ldf["LemmaID"] = ldf["LemmaID"].str.replace("_2", "")
+        ldf["LemmaID"] = ldf["LemmaID"].str.replace("_1", "")
         ldf = ldf.groupby(by="LemmaID", as_index=False).first() # remove duplicate entries
         ldf["EntryID"] = ldf["EntryID"].str.replace("_1", "") # remove duplicate number from name
         ldf["EntryID"] = ldf["EntryID"].str.replace("_", " ") # remove underscore
-        ldf["EntryID"] = ldf["EntryID"].str.strip().lower()
+        ldf["EntryID"] = ldf["EntryID"].str.strip().str.lower()
         # some are easier to fix manually...
         ldf.loc[ldf['EntryID'] == "hotdog", ['EntryID']] = "hot dog"
         ldf.loc[ldf['EntryID'] == "frenchfries", ['EntryID']] = "french fries"
