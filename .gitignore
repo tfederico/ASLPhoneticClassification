@@ -22,4 +22,5 @@ data/weights/
 *.yaml
 wandb/
 data/npys/
-/data/npy/
+data/npy/
+data
