@@ -1,0 +1,50 @@
+entity: asl4acl
+project: best_asl4acl_rnn_signtype
+program: deep_learning.test
+command:
+  - ${env}
+  - ${interpreter}
+  - '-m'
+  - ${program}
+  - ${args}
+method: grid
+metric:
+  name: val/mcc
+  goal: maximize
+parameters:
+  batch_norm:
+    value: true
+  batch_size:
+    value: 128
+  bidirectional:
+    value: false
+  dropout:
+    value: 0.40181266517218056
+  gamma:
+    value: 0.1930064435900456
+  hidden_dim:
+    value: 1024
+  label:
+    value: SignType
+  lin_dropout:
+    value: 0.013899446444233576
+  lr:
+    value: 0.0005160309582794979
+  model:
+    value: gru
+  momentum:
+    value: 0.0
+  n_layers:
+    value: 1
+  n_lin_layers:
+    value: 1
+  optimizer:
+    value: adam
+  seed:
+    values: [13, 14, 15, 16, 17]
+  source:
+    value: npy
+  step_size:
+    value: 30
+  tracker:
+    value: 27_2-hrt

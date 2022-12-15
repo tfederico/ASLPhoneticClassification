@@ -1,0 +1,42 @@
+entity: asl4acl
+project: asl4acl_3dcnn_majorlocation
+program: deep_learning.train_main
+command:
+  - ${env}
+  - ${interpreter}
+  - '-m'
+  - ${program}
+  - ${args}
+method: bayes
+metric:
+  name: val/mcc
+  goal: maximize
+parameters:
+  model:
+    value: "3dcnn"
+  dropout:
+    min: 0.0
+    max: 0.5
+  epochs:
+    value: 50
+  batch_size:
+    value: 32
+  optimizer:
+    value: "adam"
+  lr:
+    min: 0.0001
+    max: 0.1
+  step_size:
+    min: 10
+    max: 50
+  gamma:
+    min: 0.1
+    max: 0.9
+  seed:
+    value: 13
+  source:
+    value: npy
+  label:
+    value: MajorLocation
+  window_size:
+    value: 50

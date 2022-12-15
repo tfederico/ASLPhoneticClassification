@@ -13,6 +13,5 @@ ASL_phonetic_classification.egg-info
 .idea
 __pycache__
 runs/
-*.yaml
 wandb/
 
