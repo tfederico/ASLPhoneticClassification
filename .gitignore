@@ -3,12 +3,7 @@ deep_learning/Movement/
 deep_learning/SignType/
 deep_learning/test_results
 machine_learning/valid_results
-data/reduced_SignData.csv
-data/csvs
-data/small_csvs
-data/pkls/
-data/*WLASL2000
-data/*.mp4
+data
 data/interpolated_csvs
 *.pdf
 *.json
@@ -18,9 +13,6 @@ ASL_phonetic_classification.egg-info
 .idea
 __pycache__
 runs/
-data/weights/
 *.yaml
 wandb/
-data/npys/
-data/npy/
-data
+

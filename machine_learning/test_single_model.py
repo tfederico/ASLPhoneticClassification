@@ -17,7 +17,7 @@ random_seeds = [1483533434, 3708593420, 1435909850, 1717893437, 2058363314, 3759
 print("Number of different seeds:", len(random_seeds))
 
 metrics = ["micro", "macro"]
-labels = ["Movement", "MajorLocation", "SignType"]
+labels = ["MajorLocation", "SignType"]
 
 clfs = {
     "Logistic Regression": LogisticRegression,
@@ -31,8 +31,7 @@ for clf_name, clf in clfs.items():
     for label in labels:
         print("Label {}".format(label))
         X, y = preprocess_dataset(label, drop_feat_lr=drop_features_lr,
-                                      drop_feat_center=drop_features_center, different_length=True,
-                                      trick_maj_loc=False)
+                                      drop_feat_center=drop_features_center, different_length=True)
 
         metric_results = {}
         for metric in metrics:

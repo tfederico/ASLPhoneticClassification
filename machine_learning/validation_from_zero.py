@@ -26,8 +26,7 @@ params_dict = dict(zip(get_classifiers_names(), get_numerical_parameters()))
 for label in labels:
     print("Label {}".format(label))
     X, y = preprocess_dataset(label, drop_feat_lr=drop_features_lr,
-                                    drop_feat_center=drop_features_center, different_length=different_length,
-                                    trick_maj_loc=False)
+                                    drop_feat_center=drop_features_center, different_length=different_length)
     #print_labels_statistics(y)
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=test_size, random_state=random_seed, shuffle=True, stratify=y)
     for metric in metrics:

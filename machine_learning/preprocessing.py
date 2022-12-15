@@ -11,66 +11,8 @@ from deep_learning.dataset import CompleteASLDataset
 ## Remaining
 # MajorLocation, Movement
 
-def fix_sign_type(y):
-    y = np.where(y == "AsymmetricalDifferentHandshape", "Asymmetrical", y)
-    y = np.where(y == "AsymmetricalSameHandshape", "Asymmetrical", y)
-    return y
 
-def fix_minor_location(y):
-    ## Possible values
-    # HeadTop, Forehead, Eye, CheekNose, UpperLip, Mouth, Chin, UnderChin
-    # UpperArm, ElbowFront, ElbowBack, ForearmBack, ForearmFront, ForearmUlnar
-    # WristBack, WristFront, Neck, Shoulder, Clavicle, TorsoTop, TorsoMid
-    # TorsoBottom, Waist, Hips, Palm,FingerFront, PalmBack, FingerBack, FingerRadial
-    # FingerUlnar, FingerTip, Heel, Other, Neutral
-
-    #y = np.where(y == "AsymmetricalDifferentHandshape", y, "Asymmetrical")
-    return y
-
-def replace_flexion(y):
-    d = {
-        1: "FullyOpen",
-        2: "Bent",
-        3: "FlatOpen",
-        4: "FlatClosed",
-        5: "CurvedOpen",
-        6: "CurvedClose",
-        7: "FullyClose"
-    }
-
-    for key, value in d.items():
-        y = np.where(y == str(key), value, y)
-
-    return y
-
-def fix_labels(labels, y):
-    if "SignType" in labels:
-        y = fix_sign_type(y)
-    if "MinorLocation" in labels:
-        y = fix_minor_location(y)
-    if "Flexion" in labels:
-        y = replace_flexion(y)
-
-    return y
-
-def trick_major_location(y):
-    ## Possible values
-    # Arm, Body, Hand, Head, Neutral
-    corr = {
-            "Arm": "Arm",
-            "Body": "Body",
-            "Hand": "Arm",
-            "Head": "Head",
-            "Neutral": "Body"
-    }
-
-    for key, value in corr.items():
-        y = np.where(y == str(key), value, y)
-
-    return y
-
-
-def preprocess_dataset(labels, drop_feat_lr, drop_feat_center, different_length = False, trick_maj_loc=False):
+def preprocess_dataset(labels, drop_feat_lr, drop_feat_center, different_length = False):
     ## Joints names
     # Heel, Knee, Hip, Wrist, Elbow, Shoulder, Neck, Head, Nose,
     # Eye, Ear, Toe, Pinkie, Ankle, Hip.Center
@@ -98,7 +40,4 @@ def preprocess_dataset(labels, drop_feat_lr, drop_feat_center, different_length 
         flatted_X.append(x.flatten())
     X = np.array(flatted_X)
     n_samples, n_features = X.shape
-    if trick_maj_loc:
-        y = trick_major_location(y)
-    # y = fix_labels(labels, y)
     return X, y

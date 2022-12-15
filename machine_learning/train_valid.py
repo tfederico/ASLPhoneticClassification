@@ -48,13 +48,12 @@ if not os.path.exists("valid_results"):
 for label in labels:
     print("Label {}".format(label))
     X, y = preprocess_dataset(label, drop_feat_lr=drop_features_lr,
-                                    drop_feat_center=drop_features_center, different_length=different_length,
-                                    trick_maj_loc=False)
+                                    drop_feat_center=drop_features_center, different_length=different_length)
     #print_labels_statistics(y)
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=test_size, random_state=random_seed, shuffle=True, stratify=y)
     for metric in metrics:
         best_clfs, best_params, tr_scores, val_scores, best_indeces = select_best_models(X_train, y_train, random_seed, scoring=metric, n_jobs=-1)
-        ncols = 1
+        ncols = 1 # you can edit these values to change the size of the plot
         nrows = 1
 
         for i, (name, clf) in enumerate(best_clfs.items()):
@@ -67,9 +66,9 @@ for label in labels:
             sns.heatmap(cmn, vmin=0, vmax=1, annot=True, fmt='.2f', cmap="Blues",
                         square=True, ax=ax)
             if name == "Dummy":
-                title = name + " - " + best_params["Dummy"]["clf__strategy"]
+                title = name + " - " + best_params[name]["clf__strategy"]
             elif name == "SVM":
-                title = name + " - " + best_params["SVM"]["clf__kernel"]
+                title = name + " - " + best_params[name]["clf__kernel"]
             else:
                 title = name
             title += " (tr {:.02f}".format(tr_scores[name][best_indeces[name]])
