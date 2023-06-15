@@ -64,3 +64,4 @@ If you use this code, please cite
     pages = "453--463",
 }
 ```
+Original SL-GCN implementation from https://github.com/jackyjsy/CVPR21Chal-SLR
